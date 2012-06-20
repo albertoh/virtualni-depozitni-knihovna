@@ -1,6 +1,4 @@
-#Projednávané agendy systému
-
-= Agendy =
+= Projednávané Agendy systému =
 
 Projednané agendy aplikace:
 ==1.	Agenda kontroly počtu exemplářů==
@@ -34,12 +32,3 @@ Realizace nabídek (kontaktní formulář – dohoda o převzetí – příp. p�
 Více poptávkových seznamů současně (snad jen podle institucí) – hlídání konzistence vyřízených a platných poptávek
 
 Smyslem poptávkové agendy je, aby konzervační knihovny mohly adresně doplňovat ty dokumenty, o které přednostně stojí a za které jsou i ochotny zaplatit. Předpokládají se seznamy menšího rozsahu, které by byly vystaveny dlouhodobě. Alternativou je báze deziderat, vystavená trvale, časem se proměňující. Sloužila by především pro soukromé osoby a instituce, které nemají nabídkovou povinnost ze zákona. 
-
-
-
-= Details =
-
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
