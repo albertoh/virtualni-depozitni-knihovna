@@ -29,7 +29,7 @@
     <!-- Servlets -->
     <servlet>
         <servlet-name>aplikatorInitializer</servlet-name>
-        <servlet-class>cz.incad.vdkcr.server.ProkopLoaderServlet</servlet-class>
+        <servlet-class>cz.incad.vdkcr.server.VdkcrLoaderServlet</servlet-class>
         <load-on-startup>2</load-on-startup>
     </servlet>
 
@@ -97,7 +97,7 @@
           <web-resource-collection>
               <web-resource-name>Protected area</web-resource-name>
               <description>no description</description>
-              <url-pattern>/Prokop.html</url-pattern>
+              <url-pattern>/Vdkcr.html</url-pattern>
               <http-method>GET</http-method>
               <http-method>POST</http-method>
           </web-resource-collection>
@@ -116,7 +116,7 @@
 
     <!-- Default page to serve -->
     <welcome-file-list>
-        <welcome-file>Prokop.html</welcome-file>
+        <welcome-file>Vdkcr.html</welcome-file>
     </welcome-file-list>
 
     <resource-ref>
