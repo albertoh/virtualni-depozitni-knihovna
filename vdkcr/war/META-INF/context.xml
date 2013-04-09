@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Context antiJARLocking="true" path="/prokop">
+  <Resource auth="Container" driverClassName="oracle.jdbc.OracleDriver" 
+            maxActive="100" maxIdle="30" maxWait="10000" 
+            name="jdbc/aplikatorDS" password="prokop" 
+            type="javax.sql.DataSource" 
+            url="jdbc:oracle:thin:@//oratest.incad.cz:1521/orcl" 
+            username="DEV_PROKOP"/>
+</Context>
+<!--
+<Context antiJARLocking="true" path="/prokop">
+    <Resource name="jdbc/aplikatorDS" auth="Container" type="javax.sql.DataSource"
+       maxActive="100" maxIdle="30" maxWait="10000"
+       username="PROD_PROKOP" password="prokop_prod" driverClassName="oracle.jdbc.OracleDriver"
+       url="jdbc:oracle:thin:@//195.113.134.26:1521/RELIEF"/>
+</Context> 
+-->
+<!--
+<Context antiJARLocking="true" path="/prokop">
+    <Resource name="jdbc/aplikatorDS" auth="Container" type="javax.sql.DataSource"
+       maxActive="100" maxIdle="30" maxWait="10000"
+       username="PROD_PROKOP" password="prokop_prod" driverClassName="oracle.jdbc.OracleDriver"
+       url="jdbc:oracle:thin:@//10.0.0.158:1521/RELIEF"/>
+</Context>   
+-->
