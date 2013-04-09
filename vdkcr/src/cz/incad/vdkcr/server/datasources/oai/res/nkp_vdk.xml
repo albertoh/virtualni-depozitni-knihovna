@@ -2,8 +2,8 @@
 
 <setup>
     <properties>
-	<property name="indexDirectory" value="/home/vdkcr/Programs/harvest/NKP/NKC/2012" />
-        <property name="updateTimeFile" value="nkc.time" />
+	<property name="indexDirectory" value="/fast/OAI/NKC-VDK" />
+        <property name="updateTimeFile" value="nkc-vdk.time" />
         <property name="charset" value="UTF-8" />
         <property name="dateFormat" value="yyyy-MM-dd" />
         <property name="oaiDateFormat" value="yyyy-MM-dd'T'HH:mm:ss'Z'" />
@@ -25,7 +25,7 @@
         <property name="fastDateFormat" value="yyyy-MM-dd" />
         
         <property name="zdroj" value="Národní knihovna České republiky" />
-        <property name="base" value="NKC" />
+        <property name="base" value="NKC-VDK" />
         <property name="harvester" value="OAI" />
         <property name="originformat" value="marc21" />
     </properties>
