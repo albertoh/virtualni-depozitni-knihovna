@@ -15,8 +15,6 @@ import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
-import cz.incad.vdkcr.server.analytics.akka.links.URLValidationMaster;
-import cz.incad.vdkcr.server.analytics.akka.messages.StartAnalyze;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;

@@ -15,6 +15,11 @@ public class Exemplar extends Entity {
     public Property<String> rocnik;
     public Property<String> cislo;
     public Property<String> rok;
+    public Property<String> dilciKnih;
+    public Property<String> sbirka;
+    public Property<String> statusJednotky;
+    public Property<String> pocetVypujcek;
+    public Property<String> poznXerokopii;
 
     public Exemplar() {
         super("Exemplar","Exemplar","Exemplar_ID");
@@ -29,6 +34,11 @@ public class Exemplar extends Entity {
         rocnik = stringProperty("rocnik");
         cislo = stringProperty("cislo");
         rok = stringProperty("rok");
+        dilciKnih = stringProperty("dilciKnih");
+        sbirka = stringProperty("sbirka");
+        statusJednotky = stringProperty("statusJednotky");
+        pocetVypujcek = stringProperty("pocetVypujcek");
+        poznXerokopii = stringProperty("poznXerokopii");
     }
 
     @Override
@@ -36,8 +46,10 @@ public class Exemplar extends Entity {
         View retval = new View(this);
         retval.addProperty(signatura).addProperty(popis);
         retval.form(column(
-                row(signatura,carovyKod,popis),
-                row(svazek,rocnik, cislo, rok)
+                row(column(signatura).setSize(6),column(carovyKod).setSize(6)),
+                row(column(popis)),
+                row(column(svazek).setSize(3),column(rocnik).setSize(3),column(cislo).setSize(3),column(rok).setSize(3)),
+                row(column(dilciKnih,sbirka,statusJednotky,pocetVypujcek,poznXerokopii))
             ));
         return retval;
     }

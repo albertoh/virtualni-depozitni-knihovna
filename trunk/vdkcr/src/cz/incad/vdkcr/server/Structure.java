@@ -13,10 +13,6 @@ public class Structure extends Application {
     public static final Sklizen sklizen = new Sklizen();
 
 
-    public static final Modul modul = new Modul();
-    public static final Analyza analyza = new Analyza();
-
-
     public static final Autor autor = new Autor();
     public static final Edice edice = new Edice();
     public static final Exemplar exemplar = new Exemplar();
@@ -34,7 +30,6 @@ public class Structure extends Application {
 
     static {
         zdroj.sklizen = zdroj.reverseCollectionProperty("sklizen", sklizen, sklizen.zdroj);
-        modul.analyza = modul.reverseCollectionProperty("analyza", analyza, analyza.modul);
         zaznam.setPersistersTriggers(new ZaznamTrigger());
     }
 }

@@ -30,7 +30,6 @@ import javax.xml.transform.stream.StreamResult;
 import org.aplikator.client.shared.data.Operation;
 import org.aplikator.client.shared.data.Record;
 import org.aplikator.client.shared.data.RecordContainer;
-import org.aplikator.client.shared.rpc.impl.ProcessRecords;
 import org.aplikator.server.Context;
 import org.aplikator.server.util.Configurator;
 import org.w3c.dom.Node;
@@ -46,7 +45,6 @@ import cz.incad.vdkcr.server.datasources.util.XMLReader;
 import cz.incad.vdkcr.server.fast.FastIndexer;
 import cz.incad.vdkcr.server.fast.IndexTypes;
 import java.io.FileWriter;
-import java.io.InputStream;
 import java.io.StringReader;
 import javax.xml.transform.stream.StreamSource;
 
@@ -389,7 +387,16 @@ public class OAIHarvester implements DataSource {
                                 xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='996'][position()=" + (i + 1) + "]/subfield[@code='y']/text()"));
                         Structure.exemplar.cislo.setValue(ex,
                                 xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='996'][position()=" + (i + 1) + "]/subfield[@code='i']/text()"));
-                        //exsStr += exStr + ";";
+                        Structure.exemplar.dilciKnih.setValue(ex,
+                                xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='996'][position()=" + (i + 1) + "]/subfield[@code='l']/text()"));
+                        Structure.exemplar.sbirka.setValue(ex,
+                                xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='996'][position()=" + (i + 1) + "]/subfield[@code='r']/text()"));
+                        Structure.exemplar.statusJednotky.setValue(ex,
+                                xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='996'][position()=" + (i + 1) + "]/subfield[@code='n']/text()"));
+                        Structure.exemplar.pocetVypujcek.setValue(ex,
+                                xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='996'][position()=" + (i + 1) + "]/subfield[@code='s']/text()"));
+                        Structure.exemplar.poznXerokopii.setValue(ex,
+                                xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='996'][position()=" + (i + 1) + "]/subfield[@code='p']/text()"));
                         rc.addRecord(null, ex, ex, Operation.CREATE);
                     }
 
