@@ -1,3 +1,5 @@
+
+
 package cz.incad.vdkcr.server.data;
 
 import static org.aplikator.server.descriptor.Panel.column;
@@ -13,6 +15,7 @@ import org.aplikator.server.descriptor.Reference;
 import org.aplikator.server.descriptor.View;
 
 import cz.incad.vdkcr.server.Structure;
+import org.aplikator.server.descriptor.DateField;
 
 public class Sklizen extends Entity {
 
@@ -62,7 +65,8 @@ public class Sklizen extends Entity {
         View retval = new View(this);
         retval.addProperty(stav).addProperty(spusteni).addProperty(ukonceni).addProperty(pocet).addProperty(uzivatel);
         retval.form(column(
-                row(stav,spusteni, ukonceni),
+                row(stav,new DateField(spusteni).setEnabled(false).setFormatPattern("yyyy.MM.dd HH:mm"),
+                new DateField(ukonceni).setEnabled(false).setFormatPattern("yyyy.MM.dd HH:mm")),
                 row(pocet, uzivatel)
             ));
         return retval;

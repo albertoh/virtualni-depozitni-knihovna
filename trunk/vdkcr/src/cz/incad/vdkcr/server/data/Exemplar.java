@@ -48,7 +48,7 @@ public class Exemplar extends Entity {
         retval.form(column(
                 row(column(signatura).setSize(6),column(carovyKod).setSize(6)),
                 row(column(popis)),
-                row(column(svazek).setSize(3),column(rocnik).setSize(3),column(cislo).setSize(3),column(rok).setSize(3)),
+                row(column(svazek,rocnik,cislo,rok)),
                 row(column(dilciKnih,sbirka,statusJednotky,pocetVypujcek,poznXerokopii))
             ));
         return retval;

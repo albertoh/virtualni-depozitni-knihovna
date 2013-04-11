@@ -127,6 +127,25 @@ public class ReindexFast implements Executable {
         }
 
     }
+    
+    
+    String sqlSklizen = "select sklizen from autor where zaznam=?";
+    PreparedStatement psSklizen;
+
+    private void getZdroj(int zaznam_id, IDocument doc) {
+        try {
+            psAutori.setInt(1, zaznam_id);
+            ResultSet rs = psAutori.executeQuery();
+            String autori = "";
+            while (rs.next()) {
+                autori += rs.getString("nazev") + ";";
+            }
+            addFastElement(doc, "autor", autori);
+        } catch (Exception ex) {
+            logger.log(Level.WARNING, "Cant get autori for zaznam_id " + zaznam_id, ex);
+        }
+
+    }
     DocumentBuilder builder;
     private String getClob(Clob data) {
         if (data != null) {
@@ -205,10 +224,5 @@ public class ReindexFast implements Executable {
         } finally {
             disconnect();
         }
-    }
-
-    @Override
-    public FunctionResult execute(FunctionParameters parameters) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

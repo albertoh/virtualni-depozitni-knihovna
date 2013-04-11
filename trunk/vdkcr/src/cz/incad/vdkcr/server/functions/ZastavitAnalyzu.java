@@ -19,10 +19,5 @@ public class ZastavitAnalyzu implements Executable {
     public FunctionResult execute(FunctionParameters parameters, Context context) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-
-    @Override
-    public FunctionResult execute(FunctionParameters parameters) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
     
 }
