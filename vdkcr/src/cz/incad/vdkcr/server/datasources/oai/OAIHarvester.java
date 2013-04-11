@@ -278,13 +278,21 @@ public class OAIHarvester implements DataSource {
                         rc.addRecord(null, ISSN, ISSN, Operation.CREATE);
 
                     }
-                    isxn = xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='020']/subfield[@code='a']/text()");
-                    if (!"".equals(isxn)) {
+                    NodeList isbns = xmlReader.getListOfNodes(node, "./metadata/record/datafield[@tag='020']");
+                    for (int i = 0; i < isbns.getLength(); i++) {
                         Record ISBN = newSubrecord(fr.getPrimaryKey(), Structure.zaznam.identifikator);
-                        Structure.identifikator.hodnota.setValue(ISBN, isxn);
+                        String isbn = xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='020'][position()=" + (i + 1) + "]/subfield[@code='a']/text()");
+                        Structure.identifikator.hodnota.setValue(ISBN, isbn);
                         Structure.identifikator.typ.setValue(ISBN, "ISBN");
                         rc.addRecord(null, ISBN, ISBN, Operation.CREATE);
                     }
+//                    isxn = xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='020']/subfield[@code='a']/text()");
+//                    if (!"".equals(isxn)) {
+//                        Record ISBN = newSubrecord(fr.getPrimaryKey(), Structure.zaznam.identifikator);
+//                        Structure.identifikator.hodnota.setValue(ISBN, isxn);
+//                        Structure.identifikator.typ.setValue(ISBN, "ISBN");
+//                        rc.addRecord(null, ISBN, ISBN, Operation.CREATE);
+//                    }
                     Record cnb = newSubrecord(fr.getPrimaryKey(), Structure.zaznam.identifikator);
                     String cnbStr = xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='015']/subfield[@code='a']/text()");
                     Structure.identifikator.hodnota.setValue(cnb, cnbStr);

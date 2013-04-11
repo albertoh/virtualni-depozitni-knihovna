@@ -2,7 +2,7 @@
 
 <setup>
     <properties>
-        <property name="indexDirectory" value="/media/SW_Preload/Datos/vdkcr/OAI/VKOL/VKOLOAI" />
+        <property name="indexDirectory" value="/fast/OAI/VKOL" />
         <property name="updateTimeFile" value="vkol.time" />
         <property name="charset" value="UTF-8" />
         <property name="dateFormat" value="yyyy-MM-dd" />
@@ -19,12 +19,6 @@
         <property name="identifierPrefix" value="oai:aleph.vkol.cz:"/>
         
         <property name="interval" value="month" comment="year|month|day|hour" />
-        
-        <!-- fast properties -->
-        <property name="fastHost" value="albertoESPfedora.incad.cz:16100" />
-        <property name="fastCollection" value="vdkcr" />
-        <property name="fastBatchSize" value="500" />
-        <property name="fastDateFormat" value="yyyy-MM-dd" />
         
         <property name="zdroj" value="Vědecká knihovna v Olomouci" />
         <property name="base" value="VKOLOAI" />
