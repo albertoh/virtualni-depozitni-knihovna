@@ -5,7 +5,7 @@
 CRONy budou nastaveny u knihoven KN, MZK, VKOL na 1x24h
 
 
-Systém bude pracovat s téměř kompletním setem (nemusí být 100% vůči katalohu)
+Systém bude pracovat s téměř kompletním setem (nemusí být 100% vůči katalogu)
 
 
 = Ukoly =
@@ -14,9 +14,9 @@ Zjistit jak ověřit, že OAI set je a byl sklizen kompletní - RZ
 
 Popis statusů a jak s nimi nakládat - JP
 
-Popsat, jak porovnat, že jsou dva exempláře stejné - ???
+Popsat, jak porovnat, že jsou dva exempláře stejné - TF
 
-Jak stanovit počet pro jednotlivé knihovny - ???
+Jak stanovit podmínku pro jednotlivé knihovny, kdy má být exemplář doporučen k posouzení - TF
 
 Vypublikovat OAI set VDK za NK  - RZ
 
