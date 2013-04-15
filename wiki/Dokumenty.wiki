@@ -1,0 +1,15 @@
+#odkaz 
+
+= Poznamky =
+
+CRONy budou nastaveny u knihoven KN, MZK, VKOL na 1x24h
+
+
+Systém bude pracovat s téměř kompletním setem (nemusí být 100% vůči katalohu)
+
+
+
+= Ukoly =
+
+Zjistit jak ověřit, že OAI set je a byl sklizen kompletní - RZ
+Popis statusů a jak s nimi nakládat - JP
