@@ -14,7 +14,9 @@ Zjistit jak ověřit, že OAI set je a byl sklizen kompletní - RZ
 
 Popis statusů a jak s nimi nakládat - JP
 
-Popsat, jak porovnat, že jsou dva exempláře stejné - JP/TF 
+Popsat, jak porovnat, že jsou dva exempláře stejné - ???
+
+Jak stanovit počet pro jednotlivé knihovny - ???
 
 
 
