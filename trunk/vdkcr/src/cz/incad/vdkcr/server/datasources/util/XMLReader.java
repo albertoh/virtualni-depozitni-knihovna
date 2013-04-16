@@ -71,7 +71,7 @@ public class XMLReader {
             XPathFactory factory = XPathFactory.newInstance();
             xpath = factory.newXPath();
         } catch (Exception ex) {
-            logger.log(Level.WARNING, "Can''t load xml: {0}", ex.getMessage());
+            logger.log(Level.WARNING, "Can't load xml: {0}", ex.getMessage());
         }
     }
 

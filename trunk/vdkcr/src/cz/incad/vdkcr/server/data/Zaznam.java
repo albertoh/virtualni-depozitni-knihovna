@@ -1,11 +1,14 @@
 package cz.incad.vdkcr.server.data;
 
 import cz.incad.vdkcr.server.Structure;
+import org.aplikator.client.shared.data.Record;
+import org.aplikator.server.Context;
 import org.aplikator.server.descriptor.*;
 
 import static org.aplikator.server.descriptor.Panel.column;
 import static org.aplikator.server.descriptor.Panel.row;
 import static org.aplikator.server.descriptor.RepeatedForm.repeated;
+import org.aplikator.server.persistence.PersisterTriggers;
 
 public class Zaznam extends Entity {
     public Property<String> typDokumentu;
@@ -49,15 +52,26 @@ public class Zaznam extends Entity {
         sklizen = referenceProperty(Structure.sklizen, "sklizen");
         uzivatel = stringProperty("uzivatel");
         addIndex("url_zaznam_idx", true, urlZdroje);
+        
+        this.setPersistersTriggers(new PersisterTriggers.Default() {
+            @Override
+            public void afterLoad(Record record, Context ctx) {
+                record.setPreview("<b>"+record.getValue(Structure.zaznam.hlavniNazev.getId())
+                +"</b> ("+record.getValue(Structure.zaznam.typDokumentu.getId())+")");
+            }
+            
+        });
 
     }
 
     @Override
     protected View initDefaultView() {
         View retval = new View(this);
-        retval.addProperty(hlavniNazev).addProperty(typDokumentu).addProperty(urlZdroje);
+        retval.addProperty(hlavniNazev).addProperty(typDokumentu);
+        retval.setPageSize(20);
         retval.form(column(
-                row(hlavniNazev,typDokumentu),
+                row(column(hlavniNazev).setSize(10)),
+                typDokumentu,
                 urlZdroje,
                 repeated(identifikator),
                 row(repeated(nazev),repeated(jazyk)),
@@ -66,11 +80,11 @@ public class Zaznam extends Entity {
                 repeated(rozsah),
                 repeated(periodicita),
                 repeated(edice),
-                repeated(exemplar),
+                repeated(exemplar, Structure.exemplar.view()),
                 repeated(digitalniVerze),
                 ReferenceField.reference(sklizen, Structure.sklizen.spusteni,Structure.sklizen.stav),
                 new TextArea(sourceXML).setSize(12)
-            ));
+            ), false);
         retval.setSortProperty(this.getPrimaryKey());    // hack kvůli řazení záznamů pozpátku. v případě nespokojenosti zakomentovat tento a následující řádek
         retval.setSortAscending(false);
         return retval;

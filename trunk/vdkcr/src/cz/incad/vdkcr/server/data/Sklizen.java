@@ -54,8 +54,8 @@ public class Sklizen extends Entity {
         spusteni = dateProperty("spusteni");
         ukonceni = dateProperty("ukonceni");
         stav = stringProperty("stav").setListProvider(new ListProvider.Default<String>(Stav.values()));
-        pocet = integerProperty("pocet");
-        uzivatel = stringProperty("uzivatel");
+        pocet = integerProperty("pocet").setEditable(false);
+        uzivatel = stringProperty("uzivatel").setEditable(false);
 
         zdroj = referenceProperty(Structure.zdroj, "zdroj");
     }
@@ -65,10 +65,16 @@ public class Sklizen extends Entity {
         View retval = new View(this);
         retval.addProperty(stav).addProperty(spusteni).addProperty(ukonceni).addProperty(pocet).addProperty(uzivatel);
         retval.form(column(
-                row(stav,new DateField(spusteni).setEnabled(false).setFormatPattern("yyyy.MM.dd HH:mm"),
-                new DateField(ukonceni).setEnabled(false).setFormatPattern("yyyy.MM.dd HH:mm")),
-                row(pocet, uzivatel)
-            ));
+                        row(
+                            column(stav).setSize(4),
+                            column(new DateField(spusteni).setEnabled(false).setFormatPattern("yyyy.MM.dd HH:mm")).setSize(4),
+                            column(new DateField(ukonceni).setEnabled(false).setFormatPattern("yyyy.MM.dd HH:mm")).setSize(4)
+                        ),
+                        row(
+                            column(pocet).setSize(4),
+                            column(uzivatel).setSize(8)
+                        )
+            ), false);
         return retval;
     }
 

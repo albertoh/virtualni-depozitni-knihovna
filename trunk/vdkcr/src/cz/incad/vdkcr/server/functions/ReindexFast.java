@@ -61,6 +61,11 @@ public class ReindexFast implements Executable {
             return new FunctionResult("Reindexace se nepovedla", false);
         }
     }
+    
+    public static void main(String[] args){
+        ReindexFast ri = new ReindexFast();
+        ri.execute(null, null);
+    }
 
     private void connect() throws ClassNotFoundException, SQLException {
         logger.fine("Connecting...");
@@ -96,9 +101,11 @@ public class ReindexFast implements Executable {
             while (rs.next()) {
                 String typ = rs.getString("typ");
                 if(typ.equals("cCNB")){
-                    addFastElement(doc, "ccnb", rs.getString("hodnota"));
+                    addFastElement(doc, "generic1", rs.getString("hodnota"));
+                    addFastElement(doc, "igeneric1", rs.getString("hodnota"));
                 }else if(typ.equals("ISBN") || typ.equals("ISSN")){
-                    addFastElement(doc, "isxn", rs.getString("hodnota"));
+                    addFastElement(doc, "isbn", rs.getString("hodnota"));
+                    addFastElement(doc, "igeneric2", rs.getString("hodnota"));
                 }
                 //addFastElement(doc, rs.getString("typ").toLowerCase(), rs.getString("hodnota"));
 //                addFastElement(doc, "isxn", rs.getString("ISSN"));
@@ -129,20 +136,21 @@ public class ReindexFast implements Executable {
     }
     
     
-    String sqlSklizen = "select sklizen from autor where zaznam=?";
-    PreparedStatement psSklizen;
+    String sqlZdroj = "select nazev, typZdroje, formatxml from sklizen, zdroj where sklizen.ZDROJ=zdroj.ZDROJ_ID and sklizen.SKLIZEN_ID=?";
+    PreparedStatement psZdroj;
 
-    private void getZdroj(int zaznam_id, IDocument doc) {
+    private void getZdroj(int sklizen_id, IDocument doc) {
         try {
-            psAutori.setInt(1, zaznam_id);
-            ResultSet rs = psAutori.executeQuery();
-            String autori = "";
+            psZdroj.setInt(1, sklizen_id);
+            ResultSet rs = psZdroj.executeQuery();
             while (rs.next()) {
-                autori += rs.getString("nazev") + ";";
+                addFastElement(doc, "zdroj", rs.getString("nazev"));
+                addFastElement(doc, "base", rs.getString("nazev"));
+                addFastElement(doc, "harvester", rs.getString("typZdroje"));
+                addFastElement(doc, "originformat", rs.getString("formatxml"));
             }
-            addFastElement(doc, "autor", autori);
         } catch (Exception ex) {
-            logger.log(Level.WARNING, "Cant get autori for zaznam_id " + zaznam_id, ex);
+            logger.log(Level.WARNING, "Cant get zdroj for sklizen_id " + sklizen_id, ex);
         }
 
     }
@@ -192,10 +200,11 @@ public class ReindexFast implements Executable {
     private boolean getRecords() {
         try {
             connect();
-            String sqlZaznam = "select * from zaznam, zdroj, sklizen where sklizen.ZDROJ=zdroj.ZDROJ_ID and zaznam.SKLIZEN=sklizen.SKLIZEN_ID";
+            String sqlZaznam = "select ZAZNAM_ID, hlavninazev, url, typdokumentu, SKLIZEN from zaznam";
             PreparedStatement ps = conn.prepareStatement(sqlZaznam);
             psId = conn.prepareStatement(sqlIdentifikator);
             psAutori = conn.prepareStatement(sqlAutori);
+            psZdroj = conn.prepareStatement(sqlZdroj);
             ResultSet rs = ps.executeQuery();
             int zaznam_id;
             while (rs.next()) {
@@ -208,10 +217,8 @@ public class ReindexFast implements Executable {
 
                 getIdentifikator(zaznam_id, doc);
                 getAutori(zaznam_id, doc);
-                addFastElement(doc, "zdroj", rs.getString("nazev"));
-                addFastElement(doc, "base", rs.getString("nazev"));
-                addFastElement(doc, "harvester", rs.getString("typZdroje"));
-                addFastElement(doc, "originformat", rs.getString("formatxml"));
+                getZdroj(rs.getInt("SKLIZEN"), doc);
+                
                 //String xmlStr = getClob(rs.getClob("sourcexml"));
                 String xmlStr = "<record />";
                 addFastElement(doc, "data", xmlStr);
