@@ -5,6 +5,6 @@ import org.aplikator.server.Context;
 
 public interface DataSource {
 
-    public int harvest(String params, Record sklizen, Context ctx );
+    public int harvest(String params, Record sklizen, Context ctx ) throws Exception;
 
 }

@@ -30,6 +30,6 @@ public class Structure extends Application {
 
     static {
         zdroj.sklizen = zdroj.reverseCollectionProperty("sklizen", sklizen, sklizen.zdroj);
-        zaznam.setPersistersTriggers(new ZaznamTrigger());
+        //zaznam.setPersistersTriggers(new ZaznamTrigger());
     }
 }

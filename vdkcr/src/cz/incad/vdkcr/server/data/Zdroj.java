@@ -1,5 +1,6 @@
 package cz.incad.vdkcr.server.data;
 
+import cz.incad.vdkcr.server.Structure;
 import static org.aplikator.server.descriptor.Panel.column;
 import static org.aplikator.server.descriptor.Panel.row;
 import static org.aplikator.server.descriptor.RepeatedForm.repeated;
@@ -11,6 +12,9 @@ import org.aplikator.server.descriptor.Property;
 import org.aplikator.server.descriptor.View;
 
 import cz.incad.vdkcr.server.functions.SkliditZdroj;
+import org.aplikator.client.shared.data.Record;
+import org.aplikator.server.Context;
+import org.aplikator.server.persistence.PersisterTriggers;
 
 public class Zdroj extends Entity {
 
@@ -36,19 +40,31 @@ public class Zdroj extends Entity {
         trida = stringProperty("trida");
         parametry = stringProperty("parametry");
         cron = stringProperty("cron");
+        
+        this.setPersistersTriggers(new PersisterTriggers.Default() {
+
+            @Override
+            public void afterLoad(Record record, Context ctx) {
+                record.setPreview("<b>"+record.getValue(Structure.zdroj.nazev.getId())
+                +"</b> ("+record.getValue(Structure.zdroj.typZdroje.getId())+")"
+                );
+            }
+            
+        });
     }
 
     @Override
     protected View initDefaultView() {
         View retval = new View(this);
-        retval.addProperty(nazev).addProperty(typZdroje).addProperty(trida);
+        retval.addProperty(nazev).addProperty(typZdroje);
         retval.form(column(
-                row(nazev,typZdroje, formatXML),
-                row(trida, parametry),
+                row(column(nazev).setSize(4),column(typZdroje).setSize(3),column(formatXML).setSize(3)),
+                row(trida.widget().setSize(6), parametry.widget().setSize(8)),
                 row(cron),
                 row(skliditZdroj),
                 row(repeated(sklizen))
-            ));
+            ), false);
+        
         return retval;
     }
 

@@ -46,11 +46,13 @@ public class Exemplar extends Entity {
         View retval = new View(this);
         retval.addProperty(signatura).addProperty(popis);
         retval.form(column(
-                row(column(signatura).setSize(6),column(carovyKod).setSize(6)),
+                row(column(signatura).setSize(5),column(carovyKod).setSize(5)),
                 row(column(popis)),
-                row(column(svazek,rocnik,cislo,rok)),
-                row(column(dilciKnih,sbirka,statusJednotky,pocetVypujcek,poznXerokopii))
-            ));
+                row(column(svazek).setSize(2),column(rocnik).setSize(2),column(cislo).setSize(2),column(rok).setSize(2)),
+                row(column(dilciKnih).setSize(4),column(sbirka).setSize(4)),
+                row(column(pocetVypujcek).setSize(4),column(poznXerokopii).setSize(4)),
+                row(column(statusJednotky))
+            ), false);
         return retval;
     }
 
