@@ -29,6 +29,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import org.aplikator.server.persistence.Persister;
 import org.aplikator.server.persistence.PersisterFactory;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
@@ -143,7 +145,7 @@ public class ReindexFast implements Executable {
         try {
             psZdroj.setInt(1, sklizen_id);
             ResultSet rs = psZdroj.executeQuery();
-            while (rs.next()) {
+            if (rs.next()) {
                 addFastElement(doc, "zdroj", rs.getString("nazev"));
                 addFastElement(doc, "base", rs.getString("nazev"));
                 addFastElement(doc, "harvester", rs.getString("typZdroje"));
@@ -154,6 +156,22 @@ public class ReindexFast implements Executable {
         }
 
     }
+
+    private void getZdroj(int sklizen_id, FastZaznam zaznam) {
+        try {
+            psZdroj.setInt(1, sklizen_id);
+            ResultSet rs = psZdroj.executeQuery();
+            if (rs.next()) {
+                zaznam.zdroj = rs.getString("nazev");
+                zaznam.typZdroje = rs.getString("typZdroje");
+                zaznam.formatxml = rs.getString("formatxml");
+            }
+        } catch (Exception ex) {
+            logger.log(Level.WARNING, "Cant get zdroj for sklizen_id " + sklizen_id, ex);
+        }
+
+    }
+    
     DocumentBuilder builder;
     private String getClob(Clob data) {
         if (data != null) {
@@ -197,23 +215,145 @@ public class ReindexFast implements Executable {
 
     }
 
+    
+    String sqlExemplar = "select * from Exemplar where zaznam=?";
+    PreparedStatement psExemplar;
+    private void getExemplare(int zaznam_id, FastZaznam zaznam){
+        try {
+            psExemplar.setInt(1, zaznam_id);
+            ResultSet rs = psExemplar.executeQuery();
+            while (rs.next()) {
+                IDocument doc = DocumentFactory.newDocument(rs.getString("EXEMPLAR_ID"));
+                
+                //Zaznam
+                addFastElement(doc, "title", zaznam.hlavninazev);
+                doc.addElement(DocumentFactory.newInteger("dbid", zaznam_id));
+                doc.addElement(DocumentFactory.newString("url", zaznam.url));
+                addFastElement(doc, "druhdokumentu", zaznam.typdokumentu);
+                
+                //Zdroj
+                addFastElement(doc, "zdroj", zaznam.zdroj);
+                addFastElement(doc, "base", zaznam.zdroj);
+                addFastElement(doc, "harvester", zaznam.typZdroje);
+                addFastElement(doc, "originformat", zaznam.formatxml);
+                
+                JSONObject json = new JSONObject();
+                json.put("signatura", rs.getString("signatura"));
+                
+                json.put("signatura", rs.getString("signatura"));
+                json.put("carovyKod", rs.getString("carovyKod"));
+                json.put("popis", rs.getString("popis"));
+                json.put("svazek", rs.getString("svazek"));
+                json.put("rocnik", rs.getString("rocnik"));
+                json.put("cislo", rs.getString("cislo"));
+                json.put("rok", rs.getString("rok"));
+                json.put("dilciKnih", rs.getString("dilciKnih"));
+                json.put("sbirka", rs.getString("sbirka"));
+                json.put("status", rs.getString("statusJednotky"));
+                json.put("pocetVypujcek", rs.getString("pocetVypujcek"));
+                json.put("poznXerokopii", rs.getString("poznXerokopii"));
+                
+                
+                addFastElement(doc, "generic1", rs.getString("statusJednotky"));
+                addFastElement(doc, "generic2", rs.getString("pocetVypujcek"));
+                
+                
+
+                getIdentifikator(zaznam_id, doc);
+                getAutori(zaznam_id, doc);
+                
+                
+                //String xmlStr = getClob(rs.getClob("sourcexml"));
+                String xmlStr = "<record />";
+                addFastElement(doc, "data", xmlStr);
+                fastIndexer.add(doc, IndexTypes.INSERTED);
+            }
+        } catch (Exception ex) {
+            logger.log(Level.WARNING, "Cant get exemplar for zaznam_id " + zaznam_id, ex);
+        }
+    }
+    
+    
+    private int getExemplare(int zaznam_id, IDocument doc){
+        try {
+            psExemplar.setInt(1, zaznam_id);
+            ResultSet rs = psExemplar.executeQuery();
+            String status = "";
+            int res = 0;
+            JSONObject jsonEx = new JSONObject();
+            JSONArray exArray = new JSONArray();
+            jsonEx.put("exemplare", exArray);
+            while (rs.next()) {
+                JSONObject json = new JSONObject();
+                json.put("signatura", rs.getString("signatura"));
+                
+                json.put("signatura", rs.getString("signatura"));
+                json.put("carovyKod", rs.getString("carovyKod"));
+                json.put("popis", rs.getString("popis"));
+                json.put("svazek", rs.getString("svazek"));
+                json.put("rocnik", rs.getString("rocnik"));
+                json.put("cislo", rs.getString("cislo"));
+                json.put("rok", rs.getString("rok"));
+                json.put("dilciKnih", rs.getString("dilciKnih"));
+                json.put("sbirka", rs.getString("sbirka"));
+                json.put("status", rs.getString("statusJednotky"));
+                json.put("pocetVypujcek", rs.getString("pocetVypujcek"));
+                json.put("poznXerokopii", rs.getString("poznXerokopii"));
+                exArray.put(json);
+                
+                status += rs.getString("statusJednotky") + ";";
+                res++;
+            }
+            addFastElement(doc, "poznamka", jsonEx.toString());
+            addFastElement(doc, "generic2", status);
+            return res;
+        } catch (Exception ex) {
+            logger.log(Level.WARNING, "Cant get exemplar for zaznam_id " + zaznam_id, ex);
+            return 0;
+        }
+    }
+    
     private boolean getRecords() {
         try {
+            logger.log(Level.INFO, "Getting records...");
             connect();
-            String sqlZaznam = "select ZAZNAM_ID, hlavninazev, url, typdokumentu, SKLIZEN from zaznam";
+            getZaznamy();
+            fastIndexer.sendPendingRecords();
+            logger.log(Level.INFO, "Finished");
+            return true;
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, null, ex);
+            return false;
+        } finally {
+            disconnect();
+        }
+    }
+    
+    private void getZaznamy() throws Exception {
+        
+            String sqlZaznam = "select ZAZNAM_ID, hlavninazev, url, typdokumentu, SKLIZEN from zaznam where rownum<10000";
             PreparedStatement ps = conn.prepareStatement(sqlZaznam);
             psId = conn.prepareStatement(sqlIdentifikator);
             psAutori = conn.prepareStatement(sqlAutori);
             psZdroj = conn.prepareStatement(sqlZdroj);
+            psExemplar = conn.prepareStatement(sqlExemplar);
             ResultSet rs = ps.executeQuery();
             int zaznam_id;
             while (rs.next()) {
                 zaznam_id = rs.getInt("ZAZNAM_ID");
+//                FastZaznam zaznam = new FastZaznam(zaznam_id, 
+//                        rs.getString("hlavninazev"), 
+//                        rs.getString("url"), 
+//                        rs.getString("typdokumentu"),
+//                        rs.getInt("SKLIZEN"));
+//                getExemplare(zaznam_id, zaznam);
                 IDocument doc = DocumentFactory.newDocument(rs.getString("url"));
                 addFastElement(doc, "title", rs.getString("hlavninazev"));
                 doc.addElement(DocumentFactory.newInteger("dbid", zaznam_id));
                 doc.addElement(DocumentFactory.newString("url", rs.getString("url")));
                 addFastElement(doc, "druhdokumentu", rs.getString("typdokumentu"));
+                int exemplare = getExemplare(zaznam_id, doc);
+                doc.addElement(DocumentFactory.newString("generic1", Integer.toString(exemplare)));
 
                 getIdentifikator(zaznam_id, doc);
                 getAutori(zaznam_id, doc);
@@ -224,12 +364,31 @@ public class ReindexFast implements Executable {
                 addFastElement(doc, "data", xmlStr);
                 fastIndexer.add(doc, IndexTypes.INSERTED);
             }
-            return true;
-        } catch (Exception ex) {
-            logger.log(Level.SEVERE, null, ex);
-            return false;
-        } finally {
-            disconnect();
+    }
+
+    private class FastZaznam {
+        int zaznam_id;
+        String hlavninazev;
+        String url;
+        String typdokumentu;
+        int sklizen;
+        String zdroj;
+        String typZdroje;
+        String formatxml;
+        
+
+        public FastZaznam(int zaznam_id, 
+                String hlavninazev, 
+                String url, 
+                String typdokumentu,
+                int sklizen) {
+            this.zaznam_id = zaznam_id;
+            this.hlavninazev = hlavninazev;
+            this.url = url;
+            this.typdokumentu = typdokumentu;
+            this.sklizen = sklizen;
+            
+            getZdroj(sklizen, this);
         }
     }
 }
