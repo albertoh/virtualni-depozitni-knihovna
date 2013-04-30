@@ -29,8 +29,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import org.aplikator.server.persistence.Persister;
 import org.aplikator.server.persistence.PersisterFactory;
-import org.json.JSONArray;
-import org.json.JSONObject;
+//import org.json.JSONArray;
+//import org.json.JSONObject;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
@@ -233,7 +233,7 @@ public class ReindexFast implements Executable {
                 addFastElement(doc, "base", zaznam.zdroj);
                 addFastElement(doc, "harvester", zaznam.typZdroje);
                 addFastElement(doc, "originformat", zaznam.formatxml);
-                
+/*                
                 JSONObject json = new JSONObject();
                 json.put("signatura", rs.getString("signatura"));
                 
@@ -249,7 +249,7 @@ public class ReindexFast implements Executable {
                 json.put("status", rs.getString("statusJednotky"));
                 json.put("pocetVypujcek", rs.getString("pocetVypujcek"));
                 json.put("poznXerokopii", rs.getString("poznXerokopii"));
-                
+*/                
                 
                 addFastElement(doc, "generic1", rs.getString("statusJednotky"));
                 addFastElement(doc, "generic2", rs.getString("pocetVypujcek"));
@@ -277,10 +277,11 @@ public class ReindexFast implements Executable {
             ResultSet rs = psExemplar.executeQuery();
             String status = "";
             int res = 0;
-            JSONObject jsonEx = new JSONObject();
-            JSONArray exArray = new JSONArray();
-            jsonEx.put("exemplare", exArray);
+//            JSONObject jsonEx = new JSONObject();
+//            JSONArray exArray = new JSONArray();
+//            jsonEx.put("exemplare", exArray);
             while (rs.next()) {
+                /*
                 JSONObject json = new JSONObject();
                 json.put("signatura", rs.getString("signatura"));
                 
@@ -297,11 +298,11 @@ public class ReindexFast implements Executable {
                 json.put("pocetVypujcek", rs.getString("pocetVypujcek"));
                 json.put("poznXerokopii", rs.getString("poznXerokopii"));
                 exArray.put(json);
-                
+                */
                 status += rs.getString("statusJednotky") + ";";
                 res++;
             }
-            addFastElement(doc, "poznamka", jsonEx.toString());
+//            addFastElement(doc, "poznamka", jsonEx.toString());
             addFastElement(doc, "generic2", status);
             return res;
         } catch (Exception ex) {

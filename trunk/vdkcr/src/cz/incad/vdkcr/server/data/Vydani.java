@@ -29,7 +29,8 @@ public class Vydani extends Entity {
         View retval = new View(this);
         retval.addProperty(oznaceni).addProperty(nakladatel);
         retval.form(
-                row(oznaceni,nakladatel,misto,datum)
+                row(oznaceni,nakladatel,misto,datum),
+                false
             );
         return retval;
     }

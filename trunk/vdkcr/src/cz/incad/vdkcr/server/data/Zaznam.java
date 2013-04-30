@@ -70,11 +70,11 @@ public class Zaznam extends Entity {
         retval.addProperty(hlavniNazev).addProperty(typDokumentu);
         retval.setPageSize(20);
         retval.form(column(
-                row(column(hlavniNazev).setSize(10)),
-                typDokumentu,
+                row(hlavniNazev.widget().setSize(9), typDokumentu.widget().setSize(3)),
                 urlZdroje,
                 repeated(identifikator),
-                row(repeated(nazev),repeated(jazyk)),
+                repeated(nazev),
+                repeated(jazyk),
                 repeated(autor),
                 repeated(vydani),
                 repeated(rozsah),
@@ -83,7 +83,7 @@ public class Zaznam extends Entity {
                 repeated(exemplar, Structure.exemplar.view()),
                 repeated(digitalniVerze),
                 ReferenceField.reference(sklizen, Structure.sklizen.spusteni,Structure.sklizen.stav),
-                new TextArea(sourceXML).setSize(12)
+                new TextArea(sourceXML)
             ), false);
         retval.setSortProperty(this.getPrimaryKey());    // hack kvůli řazení záznamů pozpátku. v případě nespokojenosti zakomentovat tento a následující řádek
         retval.setSortAscending(false);

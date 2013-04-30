@@ -36,7 +36,7 @@ public class Exemplar extends Entity {
         rok = stringProperty("rok");
         dilciKnih = stringProperty("dilciKnih");
         sbirka = stringProperty("sbirka");
-        statusJednotky = stringProperty("statusJednotky");
+        statusJednotky = stringProperty("statusJednotky").setListProvider(Status.getGroupList());
         pocetVypujcek = stringProperty("pocetVypujcek");
         poznXerokopii = stringProperty("poznXerokopii");
     }
@@ -47,13 +47,15 @@ public class Exemplar extends Entity {
         retval.addProperty(signatura).addProperty(popis);
         retval.form(column(
                 row(column(signatura).setSize(5),column(carovyKod).setSize(5)),
-                row(column(popis)),
-                row(column(svazek).setSize(2),column(rocnik).setSize(2),column(cislo).setSize(2),column(rok).setSize(2)),
+                row(popis),
+                row(svazek,rocnik,cislo,rok),
                 row(column(dilciKnih).setSize(4),column(sbirka).setSize(4)),
                 row(column(pocetVypujcek).setSize(4),column(poznXerokopii).setSize(4)),
-                row(column(statusJednotky))
+                row(statusJednotky)
             ), false);
         return retval;
     }
+    
+    
 
 }
