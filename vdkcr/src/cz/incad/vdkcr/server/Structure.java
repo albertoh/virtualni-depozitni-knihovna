@@ -25,6 +25,7 @@ public class Structure extends Application {
     public static final DigitalniVerze digitalniVerze = new DigitalniVerze();
 
     public static final Zaznam zaznam = new Zaznam();
+    public static final Status status = new Status();
 
 
 

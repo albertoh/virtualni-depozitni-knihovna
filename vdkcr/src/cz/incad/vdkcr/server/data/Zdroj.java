@@ -59,7 +59,7 @@ public class Zdroj extends Entity {
         retval.addProperty(nazev).addProperty(typZdroje);
         retval.form(column(
                 row(column(nazev).setSize(4),column(typZdroje).setSize(3),column(formatXML).setSize(3)),
-                row(trida.widget().setSize(6), parametry.widget().setSize(8)),
+                row(trida.widget().setSize(4), parametry.widget().setSize(6)),
                 row(cron),
                 row(skliditZdroj),
                 row(repeated(sklizen))

@@ -42,13 +42,13 @@ public class Status extends Entity {
     }
     
     public static ListProvider<String> getGroupList() {
-        String query = "select code, name from status";
+        String query = "select code, nazev from status";
         
         List<ListItem<String>> groupsList = new JDBCQueryTemplate<ListItem<String>>(PersisterFactory.getPersister().getJDBCConnection()) {
             @Override
             public boolean handleRow(ResultSet rs, List<ListItem<String>> retList) throws SQLException {
                 String id = rs.getString("code");
-                String name = rs.getString("name");
+                String name = rs.getString("nazev");
                 retList.add(new ListItem.Default<String>(id, name));
                 return true;
             }
