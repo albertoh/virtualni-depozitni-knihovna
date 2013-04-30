@@ -4,7 +4,6 @@ import cz.incad.vdkcr.server.Structure;
 import org.aplikator.client.shared.data.Record;
 import org.aplikator.server.Context;
 import org.aplikator.server.descriptor.*;
-
 import static org.aplikator.server.descriptor.Panel.column;
 import static org.aplikator.server.descriptor.Panel.row;
 import static org.aplikator.server.descriptor.RepeatedForm.repeated;
@@ -52,6 +51,7 @@ public class Zaznam extends Entity {
         sklizen = referenceProperty(Structure.sklizen, "sklizen");
         uzivatel = stringProperty("uzivatel");
         addIndex("url_zaznam_idx", true, urlZdroje);
+        addIndex("view_zaznam_idx", false, getPrimaryKey(), hlavniNazev, typDokumentu);
         
         this.setPersistersTriggers(new PersisterTriggers.Default() {
             @Override

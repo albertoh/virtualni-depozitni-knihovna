@@ -103,16 +103,13 @@ public class ReindexFast implements Executable {
             while (rs.next()) {
                 String typ = rs.getString("typ");
                 if(typ.equals("cCNB")){
-                    addFastElement(doc, "generic1", rs.getString("hodnota"));
+                    addFastElement(doc, "ccnb", rs.getString("hodnota"));
                     addFastElement(doc, "igeneric1", rs.getString("hodnota"));
                 }else if(typ.equals("ISBN") || typ.equals("ISSN")){
-                    addFastElement(doc, "isbn", rs.getString("hodnota"));
+                    addFastElement(doc, "isxn", rs.getString("hodnota"));
                     addFastElement(doc, "igeneric2", rs.getString("hodnota"));
                 }
                 //addFastElement(doc, rs.getString("typ").toLowerCase(), rs.getString("hodnota"));
-//                addFastElement(doc, "isxn", rs.getString("ISSN"));
-//                addFastElement(doc, "isxn", rs.getString("ISBN"));
-//                addFastElement(doc, "ccnb", rs.getString("ccnb"));
             }
         } catch (Exception ex) {
             logger.log(Level.WARNING, "Cant get identifikator for zaznam_id " + zaznam_id, ex);
@@ -315,7 +312,6 @@ public class ReindexFast implements Executable {
     
     private boolean getRecords() {
         try {
-            logger.log(Level.INFO, "Getting records...");
             connect();
             getZaznamy();
             fastIndexer.sendPendingRecords();
@@ -331,7 +327,8 @@ public class ReindexFast implements Executable {
     
     private void getZaznamy() throws Exception {
         
-            String sqlZaznam = "select ZAZNAM_ID, hlavninazev, url, typdokumentu, SKLIZEN from zaznam where rownum<10000";
+            String sqlZaznam = "select ZAZNAM_ID, hlavninazev, url, typdokumentu, SKLIZEN from zaznam where SKLIZEN=5";
+            logger.log(Level.INFO, "Getting zaznamy: " + sqlZaznam);
             PreparedStatement ps = conn.prepareStatement(sqlZaznam);
             psId = conn.prepareStatement(sqlIdentifikator);
             psAutori = conn.prepareStatement(sqlAutori);
@@ -339,7 +336,9 @@ public class ReindexFast implements Executable {
             psExemplar = conn.prepareStatement(sqlExemplar);
             ResultSet rs = ps.executeQuery();
             int zaznam_id;
+            int start = 0;
             while (rs.next()) {
+                //if (start++>500000) break;
                 zaznam_id = rs.getInt("ZAZNAM_ID");
 //                FastZaznam zaznam = new FastZaznam(zaznam_id, 
 //                        rs.getString("hlavninazev"), 

@@ -31,58 +31,27 @@ public class FastIndexer {
     public int NumInserts = 0;
     public int NumUpdates = 0;
     public int NumDeletes = 0;
-
+Properties p;
+IContentManagerFactory contentManagerFactory;
+        
     public FastIndexer(String host, String collection, int batchSize) {
         this.host = host;
         this.collection = collection;
         this.batchSize = batchSize;
-//        host = conf.getProperty("fastHost");
-//        collection = conf.getProperty("fastCollection");
-//        batchSize = Integer.parseInt(conf.getProperty("fastBatchSize"));
-    }
+        
+        
 
-    /*
-    private IDocument createDocument(Record fr) throws Exception {
-    IDocument doc = DocumentFactory.newDocument(fr.id);
-    //Add String elements to the document
-    try {
-    boolean hasData = false;
-    Iterator it = fr.getFields().keySet().iterator();
-    while (it.hasNext()) {
-    Field ff = fr.getFields().get((String) it.next());
-    if (ff.name.equalsIgnoreCase("data")) {
-    hasData = true;
+            p = new Properties();
+            p.put("com.fastsearch.esp.content.http.contentdistributors", host);
+        try {            
+            
+            //Create a IContentManagerFacotory using the contentdistributor in the Properties
+            // collection
+            contentManagerFactory = ContentManagerFactory.newInstance(p);
+        } catch (FactoryException ex) {
+            Logger.getLogger(FastIndexer.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
-    if (ff.type == FieldMappingType.STRING || ff.type == FieldMappingType.CLOB) {
-    //if(ff.isMultiple){
-    //doc.addElement(DocumentFactory.newStringCollection(ff.name, ff.values));
-    //}else{
-    doc.addElement(DocumentFactory.newString(ff.name, ff.stringValue()));
-    //}
-
-    } else if (ff.type == FieldMappingType.INTEGER) {
-    doc.addElement(DocumentFactory.newIntegerCollection(ff.name, ff.values));
-    } else if (ff.type == FieldMappingType.BOOLEAN) {
-    doc.addElement(DocumentFactory.newBoolean(ff.name, (Boolean) ff.values.get(0)));
-    } else if (ff.type == FieldMappingType.DATE) {
-    doc.addElement(DocumentFactory.newDate(ff.name, (Date) ff.values.get(0)));
-    } else if (ff.type == FieldMappingType.BINARY) {
-    doc.addElement(DocumentFactory.newByteArray(ff.name, (byte[]) ff.values.get(0)));
-    }
-
-    }
-    if (!hasData) {
-    doc.addElement(DocumentFactory.newString("data", fr.id));
-    }
-
-
-    } catch (DuplicateElementException e) {
-    logger.log(Level.WARNING, "error creating fast document: {0}", fr.id);
-    logger.warning(e.toString());
-    }
-    return doc;
-    }
-     */
     public void showResults() {
         logger.log(Level.INFO, "Currently... Inserts: {0}. Updates: {1}. Deletes: {2}", new Object[]{NumInserts, NumUpdates, NumDeletes});
     }
@@ -142,19 +111,12 @@ public class FastIndexer {
         logger.info(String.format("Sending %d records to fast...", docs.size()));
         boolean liveCallbackEnabled = true;
         IContentManager contentManager = null;
+        Callback cb;
         try {
 
-            //Create a IContentManager that uses contentdistributor
-            //on "localhost:16100". Callbacks will be received on an Callback instance
-            Properties p = new Properties();
-            p.put("com.fastsearch.esp.content.http.contentdistributors", host);
-
-            //Create a IContentManagerFacotory using the contentdistributor in the Properties
-            // collection
-            IContentManagerFactory contentManagerFactory = ContentManagerFactory.newInstance(p);
 
             //Create callback object that handles callbacks from FAST ESP
-            Callback cb = new Callback(liveCallbackEnabled);
+            cb = new Callback(liveCallbackEnabled);
             contentManager = contentManagerFactory.create(collection, cb);
 
 
@@ -210,7 +172,9 @@ public class FastIndexer {
             //free resources
             if (contentManager != null) {
                 contentManager.deactivate();
+                contentManager.shutdown();
             }
+            cb = null;
         }
     }
 
