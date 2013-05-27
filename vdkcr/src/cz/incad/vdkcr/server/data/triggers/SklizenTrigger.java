@@ -19,7 +19,7 @@ import org.aplikator.server.persistence.PersisterTriggers;
 public class SklizenTrigger extends PersisterTriggers.Default{
 
     @Override
-    public void beforeCreate(Record record, Context ctx) {
+    public void onCreate(Record record, Context ctx) {
         Set<String> properties = record.getProperties();
         System.out.println("properties = "+properties);
         HttpServletRequest request = ctx.getHttpServletRequest();

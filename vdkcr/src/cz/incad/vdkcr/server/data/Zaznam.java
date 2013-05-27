@@ -55,7 +55,7 @@ public class Zaznam extends Entity {
         
         this.setPersistersTriggers(new PersisterTriggers.Default() {
             @Override
-            public void afterLoad(Record record, Context ctx) {
+            public void onLoad(Record record, Context ctx) {
                 record.setPreview("<b>"+record.getValue(Structure.zaznam.hlavniNazev.getId())
                 +"</b> ("+record.getValue(Structure.zaznam.typDokumentu.getId())+")");
             }

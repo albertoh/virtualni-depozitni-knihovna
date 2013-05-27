@@ -18,7 +18,7 @@ import org.aplikator.server.persistence.PersisterTriggers;
 public class ZaznamTrigger extends PersisterTriggers.Default {
 
     @Override
-    public void beforeCreate(Record record, Context ctx) {
+    public void onCreate(Record record, Context ctx) {
         System.out.println("Before create trigger");
         HttpServletRequest request = ctx.getHttpServletRequest();
         String remoteUser = request.getRemoteUser();
@@ -31,7 +31,7 @@ public class ZaznamTrigger extends PersisterTriggers.Default {
     }
 
     @Override
-    public void afterLoad(Record record, Context ctx) {
+    public void onLoad(Record record, Context ctx) {
         record.setPreview("<b>"+record.getValue(Structure.zaznam.hlavniNazev.getId())
                 +"</b> ("+record.getValue(Structure.zaznam.typDokumentu.getId())+")<br>"
                 +record.getValue(Structure.zaznam.urlZdroje.getId()));

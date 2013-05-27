@@ -4,18 +4,26 @@
  */
 package cz.incad.vdkcr.server.datasources.kramerius;
 
-import static org.aplikator.server.data.RecordUtils.newRecord;
-import static org.aplikator.server.data.RecordUtils.newSubrecord;
+import com.fastsearch.esp.content.DocumentFactory;
+import com.fastsearch.esp.content.IDocument;
+import com.typesafe.config.Config;
+import cz.incad.vdkcr.server.Structure;
+import cz.incad.vdkcr.server.datasources.DataSource;
+import cz.incad.vdkcr.server.datasources.util.XMLReader;
+import cz.incad.vdkcr.server.fast.FastIndexer;
+import cz.incad.vdkcr.server.fast.IndexTypes;
+import org.aplikator.client.shared.data.Operation;
+import org.aplikator.client.shared.data.Record;
+import org.aplikator.client.shared.data.RecordContainer;
+import org.aplikator.server.Context;
+import org.aplikator.server.util.Configurator;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.StringWriter;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.*;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -23,33 +31,8 @@ import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.xml.transform.Result;
-import javax.xml.transform.Source;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-
-import org.aplikator.client.shared.data.Operation;
-import org.aplikator.client.shared.data.Record;
-import org.aplikator.client.shared.data.RecordContainer;
-import org.aplikator.client.shared.rpc.impl.ProcessRecords;
-import org.aplikator.server.Context;
-import org.aplikator.server.util.Configurator;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
-import com.fastsearch.esp.content.DocumentFactory;
-import com.fastsearch.esp.content.IDocument;
-
-import com.typesafe.config.Config;
-import cz.incad.vdkcr.server.Structure;
-import cz.incad.vdkcr.server.datasources.DataSource;
-import cz.incad.vdkcr.server.datasources.util.XMLReader;
-import cz.incad.vdkcr.server.fast.FastIndexer;
-import cz.incad.vdkcr.server.fast.IndexTypes;
-import java.io.FileWriter;
+import static org.aplikator.server.data.RecordUtils.newRecord;
+import static org.aplikator.server.data.RecordUtils.newSubrecord;
 
 /**
  *
