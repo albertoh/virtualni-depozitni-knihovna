@@ -1,24 +1,22 @@
 package cz.incad.vdkcr.server.functions;
 
-import static org.aplikator.server.data.RecordUtils.getValue;
-import static org.aplikator.server.data.RecordUtils.newSubrecord;
-
-import java.util.Date;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
+import cz.incad.vdkcr.server.Structure;
+import cz.incad.vdkcr.server.data.Sklizen;
+import cz.incad.vdkcr.server.datasources.DataSource;
 import org.aplikator.client.shared.data.Operation;
 import org.aplikator.client.shared.data.Record;
 import org.aplikator.client.shared.data.RecordContainer;
-import org.aplikator.client.shared.rpc.impl.ProcessRecords;
 import org.aplikator.server.Context;
 import org.aplikator.server.function.Executable;
 import org.aplikator.server.function.FunctionParameters;
 import org.aplikator.server.function.FunctionResult;
 
-import cz.incad.vdkcr.server.Structure;
-import cz.incad.vdkcr.server.data.Sklizen;
-import cz.incad.vdkcr.server.datasources.DataSource;
+import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static org.aplikator.server.data.RecordUtils.getValue;
+import static org.aplikator.server.data.RecordUtils.newSubrecord;
 
 public class SkliditZdroj implements Executable {
 

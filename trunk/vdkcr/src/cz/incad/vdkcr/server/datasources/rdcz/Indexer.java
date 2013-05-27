@@ -6,30 +6,26 @@ package cz.incad.vdkcr.server.datasources.rdcz;
  */
 import com.fastsearch.esp.content.DocumentFactory;
 import com.fastsearch.esp.content.IDocument;
-import java.io.IOException;
-import static org.aplikator.server.data.RecordUtils.*;
 import com.typesafe.config.Config;
 import cz.incad.vdkcr.server.Structure;
 import cz.incad.vdkcr.server.datasources.DataSource;
 import cz.incad.vdkcr.server.fast.FastIndexer;
 import cz.incad.vdkcr.server.fast.IndexTypes;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.OutputStreamWriter;
-import java.io.Reader;
-import java.io.StringReader;
-import java.sql.Clob;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import org.aplikator.client.shared.data.Operation;
+import org.aplikator.client.shared.data.Record;
+import org.aplikator.client.shared.data.RecordContainer;
+import org.aplikator.server.Context;
+import org.aplikator.server.util.Configurator;
+import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.*;
+import java.sql.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.TimeZone;
@@ -37,17 +33,9 @@ import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import org.aplikator.client.shared.data.Operation;
-import org.aplikator.client.shared.data.Record;
-import org.aplikator.client.shared.data.RecordContainer;
-import org.aplikator.client.shared.rpc.impl.ProcessRecords;
-import org.aplikator.server.Context;
-import org.aplikator.server.util.Configurator;
-import org.w3c.dom.Document;
-import org.xml.sax.InputSource;
+
+import static org.aplikator.server.data.RecordUtils.newRecord;
+import static org.aplikator.server.data.RecordUtils.newSubrecord;
 
 public class Indexer implements DataSource {
 

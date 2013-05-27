@@ -1,17 +1,16 @@
 package cz.incad.vdkcr.server.datasources;
 
-import static org.aplikator.server.data.RecordUtils.*;
-
-import java.util.logging.Logger;
-
+import cz.incad.vdkcr.server.Structure;
 import org.aplikator.client.shared.data.Operation;
 import org.aplikator.client.shared.data.Record;
 import org.aplikator.client.shared.data.RecordContainer;
-import org.aplikator.client.shared.rpc.impl.ProcessRecords;
 import org.aplikator.server.Context;
 import org.aplikator.server.util.Configurator;
 
-import cz.incad.vdkcr.server.Structure;
+import java.util.logging.Logger;
+
+import static org.aplikator.server.data.RecordUtils.newRecord;
+import static org.aplikator.server.data.RecordUtils.newSubrecord;
 
 public class Random implements DataSource {
 
