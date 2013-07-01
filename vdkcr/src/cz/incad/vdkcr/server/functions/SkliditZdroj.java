@@ -18,7 +18,7 @@ import java.util.logging.Logger;
 import static org.aplikator.server.data.RecordUtils.getValue;
 import static org.aplikator.server.data.RecordUtils.newSubrecord;
 
-public class SkliditZdroj implements Executable {
+public class SkliditZdroj extends Executable {
 
     Logger log = Logger.getLogger(SkliditZdroj.class.getName());
 

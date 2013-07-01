@@ -2,39 +2,34 @@ package cz.incad.vdkcr.server.functions;
 
 import com.fastsearch.esp.content.DocumentFactory;
 import com.fastsearch.esp.content.IDocument;
-import java.util.logging.Logger;
-
+import com.typesafe.config.Config;
+import cz.incad.vdkcr.server.fast.FastIndexer;
+import cz.incad.vdkcr.server.fast.IndexTypes;
 import org.aplikator.server.Context;
 import org.aplikator.server.function.Executable;
 import org.aplikator.server.function.FunctionParameters;
 import org.aplikator.server.function.FunctionResult;
+import org.aplikator.server.persistence.Persister;
+import org.aplikator.server.persistence.PersisterFactory;
 import org.aplikator.server.util.Configurator;
+import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
 
-import com.typesafe.config.Config;
-
-import cz.incad.vdkcr.server.fast.FastIndexer;
-import cz.incad.vdkcr.server.fast.IndexTypes;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.sql.Clob;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.logging.Level;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import org.aplikator.server.persistence.Persister;
-import org.aplikator.server.persistence.PersisterFactory;
+import java.util.logging.Logger;
+
 //import org.json.JSONArray;
 //import org.json.JSONObject;
-import org.w3c.dom.Document;
-import org.xml.sax.InputSource;
 
-public class ReindexFast implements Executable {
+public class ReindexFast extends Executable {
 
     Logger logger = Logger.getLogger(ReindexFast.class.getName());
     private FastIndexer fastIndexer;
