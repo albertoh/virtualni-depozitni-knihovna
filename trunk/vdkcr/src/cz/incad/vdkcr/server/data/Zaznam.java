@@ -4,10 +4,11 @@ import cz.incad.vdkcr.server.Structure;
 import org.aplikator.client.shared.data.Record;
 import org.aplikator.server.Context;
 import org.aplikator.server.descriptor.*;
+import org.aplikator.server.persistence.PersisterTriggers;
+
 import static org.aplikator.server.descriptor.Panel.column;
 import static org.aplikator.server.descriptor.Panel.row;
 import static org.aplikator.server.descriptor.RepeatedForm.repeated;
-import org.aplikator.server.persistence.PersisterTriggers;
 
 public class Zaznam extends Entity {
     public Property<String> typDokumentu;
@@ -85,8 +86,7 @@ public class Zaznam extends Entity {
                 ReferenceField.reference(sklizen, Structure.sklizen.spusteni,Structure.sklizen.stav),
                 new TextArea(sourceXML)
             ), false);
-        retval.setSortProperty(this.getPrimaryKey());    // hack kvůli řazení záznamů pozpátku. v případě nespokojenosti zakomentovat tento a následující řádek
-        retval.setSortAscending(false);
+        retval.addSortDescriptor("default", "default", SortItem.descending(this.getPrimaryKey()));    // hack kvůli řazení záznamů pozpátku. v případě nespokojenosti zakomentovat tento řádek
         return retval;
     }
 

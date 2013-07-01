@@ -1,13 +1,13 @@
 package cz.incad.vdkcr.server.functions;
 
-import java.util.logging.Logger;
-
 import org.aplikator.server.Context;
 import org.aplikator.server.function.Executable;
 import org.aplikator.server.function.FunctionParameters;
 import org.aplikator.server.function.FunctionResult;
 
-public class TestFunction implements Executable {
+import java.util.logging.Logger;
+
+public class TestFunction extends Executable {
 
     Logger log = Logger.getLogger(TestFunction.class.getName());
 

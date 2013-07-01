@@ -13,7 +13,7 @@ import org.aplikator.server.function.FunctionResult;
  *
  * @author pavels
  */
-public class ZastavitAnalyzu implements Executable {
+public class ZastavitAnalyzu extends Executable {
 
     @Override
     public FunctionResult execute(FunctionParameters parameters, Context context) {
