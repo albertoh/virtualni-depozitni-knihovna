@@ -28,6 +28,8 @@ public class Structure extends Application {
     public static final Status status = new Status();
 
 
+    public static final Pohled pohled = new Pohled();
+    public static final Knihovna knihovna = new Knihovna();
 
     static {
         zdroj.sklizen = zdroj.reverseCollectionProperty("sklizen", sklizen, sklizen.zdroj);

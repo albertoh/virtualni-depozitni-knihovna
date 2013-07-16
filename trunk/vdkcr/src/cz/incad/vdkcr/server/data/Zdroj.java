@@ -27,6 +27,7 @@ public class Zdroj extends Entity {
     public Collection<Sklizen> sklizen;
 
     public Function skliditZdroj = new Function("SkliditZdroj", "SkliditZdroj", new SkliditZdroj());
+    
 
     public Zdroj() {
         super("Zdroj","Zdroj","Zdroj_ID");

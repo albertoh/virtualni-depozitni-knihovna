@@ -1,5 +1,6 @@
 package cz.incad.vdkcr.server.fast;
 
+import cz.incad.vdkcr.server.index.IndexTypes;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Properties;
@@ -8,17 +9,21 @@ import java.util.logging.Logger;
 
 import com.fastsearch.esp.content.ContentManagerException;
 import com.fastsearch.esp.content.ContentManagerFactory;
+import com.fastsearch.esp.content.DocumentFactory;
 import com.fastsearch.esp.content.FactoryException;
 import com.fastsearch.esp.content.IContentManager;
 import com.fastsearch.esp.content.IContentManagerFactory;
 import com.fastsearch.esp.content.IDocument;
 import com.fastsearch.esp.content.config.ISubsystem;
+import com.typesafe.config.Config;
+import cz.incad.vdkcr.server.index.Indexer;
+import java.util.Map;
 
 /**
  *
  * @author alberto
  */
-public class FastIndexer {
+public class FastIndexer implements Indexer {
 
     static final Logger logger = Logger.getLogger(FastIndexer.class.getName());
     String host;
@@ -34,13 +39,14 @@ public class FastIndexer {
 Properties p;
 IContentManagerFactory contentManagerFactory;
         
-    public FastIndexer(String host, String collection, int batchSize) {
-        this.host = host;
-        this.collection = collection;
-        this.batchSize = batchSize;
-        
-        
-
+    public FastIndexer(){
+    }
+    
+    @Override
+    public void config(Config config){
+        this.host = config.getString("aplikator.fastHost");
+        this.collection = config.getString("aplikator.fastCollection");
+        this.batchSize = config.getInt("aplikator.fastBatchSize");
             p = new Properties();
             p.put("com.fastsearch.esp.content.http.contentdistributors", host);
         try {            
@@ -52,10 +58,12 @@ IContentManagerFactory contentManagerFactory;
             Logger.getLogger(FastIndexer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    
     public void showResults() {
         logger.log(Level.INFO, "Currently... Inserts: {0}. Updates: {1}. Deletes: {2}", new Object[]{NumInserts, NumUpdates, NumDeletes});
     }
 
+    
     private void sendDeletedRecords() throws Exception {
         if (!recordsToDelete.isEmpty()) {
             sendRecords(recordsToDelete, IndexTypes.DELETED);
@@ -83,7 +91,8 @@ IContentManagerFactory contentManagerFactory;
         showResults();
     }
 
-    public void sendPendingRecords() throws Exception {
+    @Override
+    public void finish() throws Exception {
         sendDeletedRecords();
         sendInsertedRecords();
         sendModifiedRecords();
@@ -189,5 +198,34 @@ IContentManagerFactory contentManagerFactory;
             recordsToInsert.add(fr);
             checkSendRecords(recordsToInsert, IndexTypes.INSERTED);
         }
+    }
+
+    @Override
+    public void insertDoc(String id, Map<String, String> fields) throws Exception {
+        
+        IDocument doc = DocumentFactory.newDocument(id);
+        for(String name: fields.keySet()){
+            doc.addElement(DocumentFactory.newString(name, fields.get(name)));
+        }
+        recordsToInsert.add(doc);
+        checkSendRecords(recordsToInsert, IndexTypes.INSERTED);
+    }
+
+    @Override
+    public void updateDoc(String id, Map<String, String> fields) throws Exception {
+        
+        IDocument doc = DocumentFactory.newDocument(id);
+        for(String name: fields.keySet()){
+            doc.addElement(DocumentFactory.newString(name, fields.get(name)));
+        }
+        recordsToModify.add(doc);
+        checkSendRecords(recordsToInsert, IndexTypes.MODIFIED);
+    }
+
+    @Override
+    public void removeDoc(String id) throws Exception {
+        IDocument doc = DocumentFactory.newDocument(id);
+        recordsToDelete.add(doc);
+        checkSendRecords(recordsToDelete, IndexTypes.DELETED);
     }
 }

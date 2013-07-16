@@ -2,7 +2,7 @@
 
 <setup>
     <properties>
-        <property name="indexDirectory" value="/fast/OAI/VKOL" />
+        <property name="indexDirectory" value="/home/alberto/Projects/vdkcr/harvest/VKOL" />
         <property name="updateTimeFile" value="vkol.time" />
         <property name="charset" value="UTF-8" />
         <property name="dateFormat" value="yyyy-MM-dd" />
