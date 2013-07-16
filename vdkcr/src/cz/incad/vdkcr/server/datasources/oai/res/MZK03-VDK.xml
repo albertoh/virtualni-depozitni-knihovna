@@ -2,7 +2,7 @@
 
 <setup>
     <properties>
-        <property name="indexDirectory" value="/fast/OAI/MZK03-VDK" />
+        <property name="indexDirectory" value="/home/alberto/Projects/vdkcr/harvest/MZK03-VDK" />
         <property name="updateTimeFile" value="mzk03.time" />
         <property name="charset" value="UTF-8" />
         <property name="dateFormat" value="yyyy-MM-dd" />

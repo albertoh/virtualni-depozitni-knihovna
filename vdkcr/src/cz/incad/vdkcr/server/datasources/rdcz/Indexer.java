@@ -10,7 +10,7 @@ import com.typesafe.config.Config;
 import cz.incad.vdkcr.server.Structure;
 import cz.incad.vdkcr.server.datasources.DataSource;
 import cz.incad.vdkcr.server.fast.FastIndexer;
-import cz.incad.vdkcr.server.fast.IndexTypes;
+import cz.incad.vdkcr.server.index.IndexTypes;
 import org.aplikator.client.shared.data.Operation;
 import org.aplikator.client.shared.data.Record;
 import org.aplikator.client.shared.data.RecordContainer;
@@ -87,9 +87,8 @@ public class Indexer implements DataSource {
         } catch (SecurityException ex) {
             logger.log(Level.SEVERE, null, ex);
         }
-        fastIndexer = new FastIndexer(config.getString("aplikator.fastHost"),
-                config.getString("aplikator.fastCollection"),
-                config.getInt("aplikator.fastBatchSize"));
+        fastIndexer = new FastIndexer();
+        fastIndexer.config(config);
         id_field = conf.getProperty("id_field");
 
         domFactory = DocumentBuilderFactory.newInstance();
@@ -162,13 +161,13 @@ public class Indexer implements DataSource {
             processRecord(rs, IndexTypes.INSERTED);
         }
         rs.close();
-        fastIndexer.sendPendingRecords();
+        fastIndexer.finish();
     }
 
     private void update(String from, String to) throws Exception {
         getUpdatedRecords(from, to);
         getDeletedRecords(from, to);
-        fastIndexer.sendPendingRecords();
+        fastIndexer.finish();
     }
 
     private void getUpdatedRecords(String from, String to) throws Exception {

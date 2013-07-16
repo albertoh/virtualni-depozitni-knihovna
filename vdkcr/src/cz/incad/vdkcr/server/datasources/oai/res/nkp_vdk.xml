@@ -2,7 +2,7 @@
 
 <setup>
     <properties>
-	<property name="indexDirectory" value="/home/alberto/Projects/vdkcr/harvest" />
+	<property name="indexDirectory" value="/home/alberto/Projects/vdkcr/harvest/NKC" />
         <property name="updateTimeFile" value="nkc-vdk.time" />
         <property name="charset" value="UTF-8" />
         <property name="dateFormat" value="yyyy-MM-dd" />

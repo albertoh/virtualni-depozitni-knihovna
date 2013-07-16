@@ -7,10 +7,8 @@ import javax.servlet.ServletException;
 
 import org.aplikator.server.ApplicationLoaderServlet;
 import org.aplikator.server.descriptor.Application;
-import org.aplikator.server.descriptor.Function;
 import org.aplikator.server.descriptor.Menu;
 
-import cz.incad.vdkcr.server.functions.ReindexFast;
 
 @SuppressWarnings("serial")
 public class VdkcrLoaderServlet extends ApplicationLoaderServlet {
@@ -31,8 +29,8 @@ public class VdkcrLoaderServlet extends ApplicationLoaderServlet {
             Menu admin = new Menu("Admin");
             admin.addView(Structure.zdroj.view());
             admin.addView(Structure.status.view());
-            Function globalFunction = new Function("GlobalFunction", "GlobalFunction", new ReindexFast());
-            admin.addFunction(globalFunction);
+            //Function globalFunction = new Function("GlobalFunction", "GlobalFunction", new ReindexFast());
+            //admin.addFunction(globalFunction);
             struct.addMenu(admin);
 
             LOG.info("vdkcr Loader finished");

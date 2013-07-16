@@ -17,6 +17,9 @@ import java.util.logging.Logger;
 
 import static org.aplikator.server.data.RecordUtils.getValue;
 import static org.aplikator.server.data.RecordUtils.newSubrecord;
+import static org.aplikator.server.data.RecordUtils.getValue;
+import static org.aplikator.server.data.RecordUtils.newSubrecord;
+import org.aplikator.server.descriptor.WizardPage;
 
 public class SkliditZdroj extends Executable {
 
@@ -67,4 +70,9 @@ public class SkliditZdroj extends Executable {
         }
     }
 
+    @Override
+    public WizardPage getWizardPage(String currentPage, boolean forwardFlag, Record currentProcessingRecord, Record clientParameters, Context context) {
+        return null;
+    }
+    
 }

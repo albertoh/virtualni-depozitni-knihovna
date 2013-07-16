@@ -11,7 +11,7 @@ import cz.incad.vdkcr.server.Structure;
 import cz.incad.vdkcr.server.datasources.DataSource;
 import cz.incad.vdkcr.server.datasources.util.XMLReader;
 import cz.incad.vdkcr.server.fast.FastIndexer;
-import cz.incad.vdkcr.server.fast.IndexTypes;
+import cz.incad.vdkcr.server.index.IndexTypes;
 import org.aplikator.client.shared.data.Operation;
 import org.aplikator.client.shared.data.Record;
 import org.aplikator.client.shared.data.RecordContainer;
@@ -105,9 +105,8 @@ public class K4Harvester implements DataSource {
         try {
             xformer = TransformerFactory.newInstance().newTransformer();
             Config config = Configurator.get().getConfig();
-            fastIndexer = new FastIndexer(config.getString("aplikator.fastHost"),
-                    config.getString("aplikator.fastCollection"),
-                    config.getInt("aplikator.fastBatchSize"));
+        fastIndexer = new FastIndexer();
+        fastIndexer.config(config);
             harvest();
         } catch (TransformerConfigurationException ex) {
             Logger.getLogger(K4Harvester.class.getName()).log(Level.SEVERE, null, ex);
@@ -207,7 +206,7 @@ public class K4Harvester implements DataSource {
         }
         update(sdfoai.format(c_from.getTime()), sdfoai.format(final_date));
         if (!arguments.onlyHarvest) {
-            fastIndexer.sendPendingRecords();
+            fastIndexer.finish();
         }
 
     }
@@ -430,7 +429,7 @@ public class K4Harvester implements DataSource {
         File dir = new File(conf.getProperty("indexDirectory"));
         getRecordsFromDir(dir);
         if (!arguments.onlyHarvest) {
-            fastIndexer.sendPendingRecords();
+            fastIndexer.finish();
         }
     }
 
