@@ -22,7 +22,6 @@ import java.util.logging.Logger;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
@@ -42,16 +41,12 @@ import com.typesafe.config.Config;
 import cz.incad.vdkcr.server.Structure;
 import cz.incad.vdkcr.server.datasources.DataSource;
 import cz.incad.vdkcr.server.datasources.util.XMLReader;
-import cz.incad.vdkcr.server.fast.FastIndexer;
-import cz.incad.vdkcr.server.index.IndexTypes;
 import cz.incad.vdkcr.server.index.Indexer;
 import java.io.FileWriter;
 import java.io.StringReader;
-import java.text.DateFormat;
 import java.util.HashMap;
 import java.util.Map;
 import javax.xml.transform.stream.StreamSource;
-import org.apache.commons.lang.time.DateUtils;
 
 /**
  *
@@ -125,7 +120,7 @@ public class OAIHarvester implements DataSource {
             xformer = TransformerFactory.newInstance().newTransformer();
 
             Config config = Configurator.get().getConfig();
-            indexer = (Indexer)OAIHarvester.class.getClassLoader().loadClass(config.getString("indexerClass")).newInstance();
+            indexer = (Indexer)OAIHarvester.class.getClassLoader().loadClass(config.getString("aplikator.indexerClass")).newInstance();
             //indexer = new FastIndexer();
             indexer.config(config);
             harvest();
@@ -253,8 +248,9 @@ public class OAIHarvester implements DataSource {
                         indexer.removeDoc(error);
                     }
                 }else{
-                    //String xmlStr = nodeToString(node);
-                    String xmlStr = nodeToString(xmlReader.getNodeElement(), recordNumber);
+                    String xmlStr = "";
+                    //xmlStr = nodeToString(node);
+                    xmlStr = nodeToString(xmlReader.getNodeElement(), recordNumber);
                     //System.out.println(xmlStr);
                     RecordContainer rc = new RecordContainer();
 
@@ -420,22 +416,22 @@ public class OAIHarvester implements DataSource {
                         rc = context.getAplikatorService().processRecords(rc);
                         if (!arguments.dontIndex) {
                             Record z = rc.getRecords().get(0).getEdited();
-                            Map<String, String> fields = new HashMap<String, String>();
-                            IDocument doc = DocumentFactory.newDocument(urlZdroje);
-                            fields.put("title", hlavninazev);
-                            fields.put("dbid", Integer.toString(z.getPrimaryKey().getId()));
-                            fields.put("url", urlZdroje);
-                            fields.put("druhdokumentu", typDokumentu);
-                            fields.put("autor", autoriStr);
-                            fields.put("zdroj", conf.getProperty("zdroj"));
-                            fields.put("isxn", isxn);
-                            fields.put("ccnb", cnbStr);
-                            fields.put("base", conf.getProperty("base"));
-                            fields.put("harvester", conf.getProperty("harvester"));
-                            fields.put("originformat", conf.getProperty("originformat"));
-                            fields.put("data", xmlStr);
-                            fields.put("data", "<record />");
-                            indexer.insertDoc(urlZdroje, fields);
+//                            Map<String, String> fields = new HashMap<String, String>();
+//                            fields.put("title", hlavninazev);
+//                            fields.put("dbid", Integer.toString(z.getPrimaryKey().getId()));
+//                            fields.put("url", urlZdroje);
+//                            fields.put("druhdokumentu", typDokumentu);
+//                            fields.put("autor", autoriStr);
+//                            fields.put("zdroj", conf.getProperty("zdroj"));
+//                            fields.put("isxn", isxn);
+//                            fields.put("ccnb", cnbStr);
+//                            fields.put("base", conf.getProperty("base"));
+//                            fields.put("harvester", conf.getProperty("harvester"));
+//                            fields.put("originformat", conf.getProperty("originformat"));
+//                            fields.put("data", xmlStr);
+//                            fields.put("data", "<record />");
+//                            indexer.insertDoc(urlZdroje, fields);
+                            indexer.insertRecord(rc);
                         }
                     } catch (Exception ex) {
                         currentDocsSent--;
@@ -539,32 +535,6 @@ public class OAIHarvester implements DataSource {
         }
     }
 
-    private String readFileAsString(FileReader freader)
-            throws java.io.IOException {
-        StringBuilder fileData = new StringBuilder(1000);
-        BufferedReader reader = new BufferedReader(
-                freader);
-
-        char[] buf = new char[1024];
-
-        int numRead = 0;
-
-        while ((numRead = reader.read(buf)) != -1) {
-
-            String readData = String.valueOf(buf, 0, numRead);
-
-            fileData.append(readData);
-
-            buf = new char[1024];
-
-        }
-
-        reader.close();
-
-        return fileData.toString();
-
-    }
-
     private void getRecordsFromDir(File dir) throws Exception {
         File[] children = dir.listFiles();
         for (int i = 0; i < children.length; i++) {
@@ -592,6 +562,7 @@ public class OAIHarvester implements DataSource {
                 }
 
             }
+            break;
         }
     }
 

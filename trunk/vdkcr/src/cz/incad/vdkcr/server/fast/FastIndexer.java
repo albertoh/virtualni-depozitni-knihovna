@@ -18,6 +18,9 @@ import com.fastsearch.esp.content.config.ISubsystem;
 import com.typesafe.config.Config;
 import cz.incad.vdkcr.server.index.Indexer;
 import java.util.Map;
+import org.apache.solr.common.SolrInputDocument;
+import org.aplikator.client.shared.data.Record;
+import org.aplikator.client.shared.data.RecordContainer;
 
 /**
  *
@@ -198,6 +201,16 @@ IContentManagerFactory contentManagerFactory;
             recordsToInsert.add(fr);
             checkSendRecords(recordsToInsert, IndexTypes.INSERTED);
         }
+    }
+
+    @Override
+    public void insertRecord(RecordContainer rc) throws Exception {
+//        IDocument doc = DocumentFactory.newDocument(Integer.toString(record.getPrimaryKey().getId()));
+//        for (String name : record.getProperties()) {
+//            doc.addElement(DocumentFactory.newString(name, record.getValue(name).toString()));
+//        }
+//        recordsToInsert.add(doc);
+//        checkSendRecords(recordsToInsert, IndexTypes.INSERTED);
     }
 
     @Override

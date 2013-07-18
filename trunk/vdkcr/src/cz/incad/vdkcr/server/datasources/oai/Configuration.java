@@ -48,8 +48,9 @@ public class Configuration {
             String home = Configurator.get().getConfig().getString(Configurator.HOME)
                 + File.separator + "OAI" + File.separator + filename + ".xml";
             File file = new File(home);
+                logger.log(Level.INFO, home);
             if (file.exists()) {
-
+                logger.log(Level.INFO, "Loading from home: " + home);
                 InputSource source = new InputSource(new FileInputStream(file));
                 contentDom = builder.parse(source);
             } else {

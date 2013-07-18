@@ -16,9 +16,12 @@ import org.aplikator.server.descriptor.View;
 
 import cz.incad.vdkcr.server.Structure;
 import org.aplikator.server.descriptor.DateField;
+import org.jboss.errai.common.client.api.annotations.Portable;
 
+@Portable
 public class Sklizen extends Entity {
 
+    @Portable
     public static enum Stav implements ListItem<String>  {
         ZAHAJEN("zahajen"), UKONCEN("ukoncen"), CHYBA("chyba");
 
@@ -53,7 +56,7 @@ public class Sklizen extends Entity {
     protected void initFields() {
         spusteni = dateProperty("spusteni");
         ukonceni = dateProperty("ukonceni");
-        stav = stringProperty("stav").setListProvider(new ListProvider.Default<String>(Stav.values()));
+        stav = stringProperty("stav");//.setListProvider(new ListProvider.Default<String>(Stav.values()));
         pocet = integerProperty("pocet").setEditable(false);
         uzivatel = stringProperty("uzivatel").setEditable(false);
 
