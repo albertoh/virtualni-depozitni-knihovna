@@ -1,6 +1,11 @@
 package cz.incad.vdkcr.server.data;
 
 import cz.incad.vdkcr.server.Structure;
+import cz.incad.vdkcr.server.utils.JDBCQueryTemplate;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
+import org.aplikator.client.shared.data.ListItem;
 import org.aplikator.client.shared.data.Record;
 import org.aplikator.server.Context;
 import org.aplikator.server.descriptor.*;
@@ -9,6 +14,7 @@ import org.aplikator.server.persistence.PersisterTriggers;
 import static org.aplikator.server.descriptor.Panel.column;
 import static org.aplikator.server.descriptor.Panel.row;
 import static org.aplikator.server.descriptor.RepeatedForm.repeated;
+import org.aplikator.server.persistence.PersisterFactory;
 
 public class Zaznam extends Entity {
     public Property<String> typDokumentu;
@@ -27,6 +33,7 @@ public class Zaznam extends Entity {
     public Property<String> sourceXML;
     public Reference<Sklizen> sklizen;
     public Property<String> uzivatel;
+    public Property<String> knihovna;
 
     
     public Zaznam() {
@@ -51,6 +58,7 @@ public class Zaznam extends Entity {
         sourceXML = textProperty("sourceXML");
         sklizen = referenceProperty(Structure.sklizen, "sklizen");
         uzivatel = stringProperty("uzivatel");
+        knihovna = stringProperty("knihovna").setListProvider(Knihovna.getGroupList());
         addIndex("url_zaznam_idx", true, urlZdroje);
         addIndex("view_zaznam_idx", false, getPrimaryKey(), hlavniNazev, typDokumentu);
         

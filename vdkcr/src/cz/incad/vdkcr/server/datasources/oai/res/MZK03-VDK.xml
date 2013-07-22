@@ -2,6 +2,7 @@
 
 <setup>
     <properties>
+        <property name="knihovna" value="MZK" />
         <property name="indexDirectory" value="/home/alberto/Projects/vdkcr/harvest/MZK03-VDK" />
         <property name="updateTimeFile" value="mzk03.time" />
         <property name="charset" value="UTF-8" />

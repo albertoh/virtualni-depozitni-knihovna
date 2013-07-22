@@ -9,7 +9,7 @@ import org.aplikator.client.shared.data.RecordContainer;
  *
  * @author alberto
  */
-public interface Indexer {
+public interface DataSourceIndexer {
     public void config(Config config) throws Exception;
     public void finish() throws Exception;
     public void insertRecord(RecordContainer rc) throws Exception;

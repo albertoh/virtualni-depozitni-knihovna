@@ -177,11 +177,10 @@ public class XMLReader {
 
         Object result = expr.evaluate(node, XPathConstants.NODESET);
         NodeList nodes = (NodeList) result;
-
         StringBuilder s = new StringBuilder();
         for (int i = 0; i < nodes.getLength(); i++) {
             //s.append(nodes.item(i).getNodeValue());
-            s.append(nodes.item(i).getNodeValue() + separator);
+            s.append(nodes.item(i).getNodeValue()).append(separator);
         }
         int pos = s.lastIndexOf(separator);
         if (pos > 0) {
