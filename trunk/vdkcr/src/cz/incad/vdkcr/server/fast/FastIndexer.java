@@ -16,7 +16,7 @@ import com.fastsearch.esp.content.IContentManagerFactory;
 import com.fastsearch.esp.content.IDocument;
 import com.fastsearch.esp.content.config.ISubsystem;
 import com.typesafe.config.Config;
-import cz.incad.vdkcr.server.index.Indexer;
+import cz.incad.vdkcr.server.index.DataSourceIndexer;
 import java.util.Map;
 import org.apache.solr.common.SolrInputDocument;
 import org.aplikator.client.shared.data.Record;
@@ -26,7 +26,7 @@ import org.aplikator.client.shared.data.RecordContainer;
  *
  * @author alberto
  */
-public class FastIndexer implements Indexer {
+public class FastIndexer implements DataSourceIndexer {
 
     static final Logger logger = Logger.getLogger(FastIndexer.class.getName());
     String host;

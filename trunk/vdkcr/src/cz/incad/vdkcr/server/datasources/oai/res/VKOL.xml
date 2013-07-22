@@ -2,6 +2,7 @@
 
 <setup>
     <properties>
+        <property name="knihovna" value="VKOL" />
         <property name="indexDirectory" value="/home/alberto/Projects/vdkcr/harvest/VKOL" />
         <property name="updateTimeFile" value="vkol.time" />
         <property name="charset" value="UTF-8" />

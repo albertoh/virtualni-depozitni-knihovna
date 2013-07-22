@@ -34,18 +34,14 @@ import org.aplikator.server.util.Configurator;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import com.fastsearch.esp.content.DocumentFactory;
-import com.fastsearch.esp.content.IDocument;
 
 import com.typesafe.config.Config;
 import cz.incad.vdkcr.server.Structure;
 import cz.incad.vdkcr.server.datasources.DataSource;
 import cz.incad.vdkcr.server.datasources.util.XMLReader;
-import cz.incad.vdkcr.server.index.Indexer;
+import cz.incad.vdkcr.server.index.DataSourceIndexer;
 import java.io.FileWriter;
 import java.io.StringReader;
-import java.util.HashMap;
-import java.util.Map;
 import javax.xml.transform.stream.StreamSource;
 
 /**
@@ -64,7 +60,7 @@ public class OAIHarvester implements DataSource {
     String completeListSize;
     int currentDocsSent = 0;
     int currentIndex = 0;
-    private Indexer indexer;
+    private DataSourceIndexer indexer;
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd/HH");
     SimpleDateFormat sdfoai;
     Transformer xformer;
@@ -120,7 +116,7 @@ public class OAIHarvester implements DataSource {
             xformer = TransformerFactory.newInstance().newTransformer();
 
             Config config = Configurator.get().getConfig();
-            indexer = (Indexer)OAIHarvester.class.getClassLoader().loadClass(config.getString("aplikator.indexerClass")).newInstance();
+            indexer = (DataSourceIndexer)OAIHarvester.class.getClassLoader().loadClass(config.getString("aplikator.indexerClass")).newInstance();
             //indexer = new FastIndexer();
             indexer.config(config);
             harvest();
@@ -230,7 +226,7 @@ public class OAIHarvester implements DataSource {
     private void processRecord(Node node, String identifier, int recordNumber) throws Exception {
         if (node != null) {
             String error = xmlReader.getNodeValue(node, "/error/@code");
-            if (error.equals("")) {
+            if (error==null || error.equals("")) {
                 
                 
                 String urlZdroje = conf.getProperty("baseUrl")
@@ -238,7 +234,7 @@ public class OAIHarvester implements DataSource {
                         + "&metadataPrefix=" + metadataPrefix
                         + "#set=" + conf.getProperty("set");
 
-                if (xmlReader.getNodeValue(node, "./header/@status").equals("deleted")) {
+                if ("deleted".equals(xmlReader.getNodeValue(node, "./header/@status"))) {
                     if (arguments.fullIndex) {
                         logger.log(Level.FINE, "Skip deleted record when fullindex");
                         return;
@@ -249,14 +245,15 @@ public class OAIHarvester implements DataSource {
                     }
                 }else{
                     String xmlStr = "";
-                    //xmlStr = nodeToString(node);
-                    xmlStr = nodeToString(xmlReader.getNodeElement(), recordNumber);
+                    
+                    //xmlStr = nodeToString(xmlReader.getNodeElement(), recordNumber);
                     //System.out.println(xmlStr);
                     RecordContainer rc = new RecordContainer();
 
 
                     Record fr = newRecord(Structure.zaznam);
                     Structure.zaznam.sklizen.setValue(fr, sklizen.getPrimaryKey().getId());
+                    Structure.zaznam.knihovna.setValue(fr, conf.getProperty("knihovna"));
                     Structure.zaznam.urlZdroje.setValue(fr, urlZdroje);
                     String hlavninazev = xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='245']/subfield[@code='a']/text()");
                     Structure.zaznam.hlavniNazev.setValue(fr, hlavninazev);
@@ -562,7 +559,6 @@ public class OAIHarvester implements DataSource {
                 }
 
             }
-            break;
         }
     }
 

@@ -1,25 +1,39 @@
 package cz.incad.vdkcr.server.index.solr;
 
 import com.typesafe.config.Config;
-import cz.incad.vdkcr.server.index.Indexer;
+import cz.incad.vdkcr.server.index.DataSourceIndexer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.request.LukeRequest;
 import org.apache.solr.client.solrj.response.LukeResponse;
+import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrInputDocument;
 import org.aplikator.client.shared.data.ContainerNode;
+import org.aplikator.client.shared.data.PrimaryKey;
 import org.aplikator.client.shared.data.Record;
 import org.aplikator.client.shared.data.RecordContainer;
+import org.aplikator.client.shared.data.SearchResult;
+import org.aplikator.client.shared.descriptor.EntityDTO;
+import org.aplikator.client.shared.descriptor.ViewDTO;
+import org.aplikator.server.Context;
+import org.aplikator.server.DescriptorRegistry;
+import org.aplikator.server.descriptor.Entity;
+import org.aplikator.server.descriptor.View;
+import org.aplikator.server.persistence.search.Search;
 
 /**
  *
  * @author alberto
  */
-public class SolrIndexer implements Indexer {
+public class SolrIndexer implements DataSourceIndexer, Search {
 
     private static final Logger logger = Logger.getLogger(SolrIndexer.class.getName());
     private String host;
@@ -34,12 +48,12 @@ public class SolrIndexer implements Indexer {
     }
 
     private void check() throws Exception {
-        if (insertDocs.size() > batchSize) {
+        if (insertDocs.size() >= batchSize) {
             server.add(insertDocs);
             server.commit();
             insertDocs.clear();
         }
-        if (delDocs.size() > batchSize) {
+        if (delDocs.size() >= batchSize) {
             server.deleteById(delDocs);
             server.commit();
             delDocs.clear();
@@ -118,17 +132,16 @@ public class SolrIndexer implements Indexer {
         //System.out.println("rc: " + Marshalling.toJSON(rc));
         SolrInputDocument doc = new SolrInputDocument();
         doc.addField(idField, rc.getRecords().get(0).getEdited().getPrimaryKey().getId());
-        //Set<String> props = record.getProperties();
         for (ContainerNode cn : rc.getRecords()) {
             Record record = cn.getEdited();
-            System.out.println(record.getOwnerPropertyId());
+            String entityId = record.getPrimaryKey().getEntityId();
             for (String name : record.getProperties()) {
                 
                 String shortName = name.substring("Property:".length());
-                if(schemaFields.containsKey(shortName)){
+                //if(schemaFields.containsKey(shortName)){
                     doc.addField(shortName, record.getValue(name));
-                }
-                    System.out.println("name: " + shortName + " val: " + record.getValue(name));
+                //}
+                //System.out.println("name: " + shortName + " val: " + record.getValue(name));
             }
         }
         insertDocs.add(doc);
@@ -154,5 +167,76 @@ public class SolrIndexer implements Indexer {
     public void removeDoc(String id) throws Exception {
         delDocs.add(id);
         check();
+    }
+    
+    /* Search implements */
+
+    @Override
+    public SearchResult getPagefromSearch(ViewDTO vd, String searchArgument, int pageOffset, int pageSize, Context ctx) {
+        
+        ArrayList<Record> records = new ArrayList<Record>();
+        
+		return search(searchArgument, pageOffset,
+				pageSize);
+			// TODO - missing info from entity to create record preview
+    }
+
+    @Override
+    public SearchResult getPagefromSearch(String searchArgument, int pageOffset, int pageSize, Context ctx) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void index(Record record) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void index(EntityDTO entityDTO) {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public SearchResult search(String searchArgument, String type, int offset, int size) {
+        
+        try {
+            SolrQuery query = new SolrQuery(); 
+            query.setQuery(searchArgument);
+            query.setStart(offset);
+            query.setRows(size);
+            QueryResponse response = server.query(query); 
+            
+            
+            List<Record> records = new ArrayList<Record>();
+            for(SolrDocument sd : response.getResults()){
+                PrimaryKey pk = new PrimaryKey("Zaznam", (Integer)sd.get("id"));
+                Record record = new Record(pk);
+                records.add(record);
+            }
+            return new SearchResult(records, response.getResults().getNumFound());
+        } catch (SolrServerException ex) {
+            Logger.getLogger(SolrIndexer.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
+    }
+
+    @Override
+    public SearchResult search(String searchArgument, int offset, int size) {
+        return search(searchArgument, null, offset, size);
+    }
+
+    @Override
+    public void update(PrimaryKey primaryKey) {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void insert(PrimaryKey primaryKey) {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void delete(PrimaryKey primaryKey) {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }
