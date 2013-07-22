@@ -95,6 +95,11 @@
             <artifactId>commons-codec</artifactId>
             <version>1.6</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.solr</groupId>
+            <artifactId>solr-solrj</artifactId>
+            <version>4.3.1</version>
+        </dependency>
     </dependencies>
 
     <repositories>
@@ -125,7 +130,7 @@
                 <configuration>
                     <hostedWebapp>${basedir}/war</hostedWebapp>
                     <webappDirectory>${basedir}/war</webappDirectory>
-                    <runTarget>Prokop.html</runTarget>
+                    <runTarget>Vdkcr.html</runTarget>
 
                 </configuration>
                 <!--dependencies>
