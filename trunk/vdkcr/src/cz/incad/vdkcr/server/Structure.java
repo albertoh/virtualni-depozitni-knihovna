@@ -30,6 +30,7 @@ public class Structure extends Application {
 
     public static final Pohled pohled = new Pohled();
     public static final Knihovna knihovna = new Knihovna();
+    public static final UniqueDoc uniquedoc = new UniqueDoc();
 
     static {
         zdroj.sklizen = zdroj.reverseCollectionProperty("sklizen", sklizen, sklizen.zdroj);

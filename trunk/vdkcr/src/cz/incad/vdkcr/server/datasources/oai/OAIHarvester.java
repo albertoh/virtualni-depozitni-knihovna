@@ -37,18 +37,28 @@ import org.w3c.dom.NodeList;
 
 import com.typesafe.config.Config;
 import cz.incad.vdkcr.server.Structure;
+import cz.incad.vdkcr.server.datasources.AbstractPocessDataSource;
 import cz.incad.vdkcr.server.datasources.DataSource;
 import cz.incad.vdkcr.server.datasources.util.XMLReader;
 import cz.incad.vdkcr.server.index.DataSourceIndexer;
+import cz.incad.vdkcr.server.utils.JDBCQueryTemplate;
+import cz.incad.vdkcr.server.utils.MD5;
 import java.io.FileWriter;
 import java.io.StringReader;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
 import javax.xml.transform.stream.StreamSource;
+import org.aplikator.client.shared.data.ListItem;
+import org.aplikator.client.shared.data.PrimaryKey;
+import org.aplikator.server.persistence.Persister;
+import org.aplikator.server.persistence.PersisterFactory;
 
 /**
  *
  * @author alberto
  */
-public class OAIHarvester implements DataSource {
+public class OAIHarvester extends AbstractPocessDataSource {
 
     private static final Logger logger = Logger.getLogger(OAIHarvester.class.getName());
     private ProgramArguments arguments;
@@ -69,10 +79,13 @@ public class OAIHarvester implements DataSource {
     String homeDir;
     BufferedWriter logFile;
     BufferedWriter errorLogFile;
+    private Persister persister;
 
+    
     @Override
     public int harvest(String params, Record sklizen, Context ctx) throws Exception {
         context = ctx;
+        this.persister = PersisterFactory.getPersister();
 
         this.sklizen = sklizen;
         arguments = new ProgramArguments();
@@ -224,6 +237,12 @@ public class OAIHarvester implements DataSource {
     }
 
     private void processRecord(Node node, String identifier, int recordNumber) throws Exception {
+        
+ 
+        // check interrupted thread
+        if (Thread.currentThread().isInterrupted()) {
+            throw new InterruptedException();
+        }
         if (node != null) {
             String error = xmlReader.getNodeValue(node, "/error/@code");
             if (error==null || error.equals("")) {
@@ -249,26 +268,66 @@ public class OAIHarvester implements DataSource {
                     //xmlStr = nodeToString(xmlReader.getNodeElement(), recordNumber);
                     //System.out.println(xmlStr);
                     RecordContainer rc = new RecordContainer();
+                    
+                    String hlavninazev = xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='245']/subfield[@code='a']/text()");
+                    String cnbStr = xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='015']/subfield[@code='a']/text()");
+                    String uniqueCode = cnbStr;
+                    if("".equals(uniqueCode)){
+                        uniqueCode = MD5.generate(urlZdroje);
+                    }
+                    String query = "select UniqueDoc_ID, code from uniquedoc where code='"+uniqueCode+"'";
+                    
+                    Record unique;
+                    Record fr;
+        
+                    List<ListItem<Integer>> uniqueList = new JDBCQueryTemplate<ListItem<Integer>>(PersisterFactory.getPersister().getJDBCConnection()) {
+                        @Override
+                        public boolean handleRow(ResultSet rs, List<ListItem<Integer>> retList) throws SQLException {
+                            Integer id = rs.getInt("UniqueDoc_ID");
+                            String code = rs.getString("code");
+                            retList.add(new ListItem.Default<Integer>(id, code));
+                            return true;
+                        }
+
+                    }.executeQuery(query);
+                    
+                    if(uniqueList.isEmpty()){
+                        unique = newRecord(Structure.uniquedoc);
+                        Structure.uniquedoc.code.setValue(unique, uniqueCode);
+                        Structure.uniquedoc.nazev.setValue(unique, hlavninazev);
+                        rc.addRecord(null, unique, unique, Operation.CREATE);
+                        fr = newSubrecord(unique.getPrimaryKey(), Structure.uniquedoc.zaznam);
+                    }else{
+                        PrimaryKey pk = new PrimaryKey("uniquedoc", uniqueList.get(0).getValue());
+                        fr = newSubrecord(pk, Structure.uniquedoc.zaznam);
+                    }
 
 
-                    Record fr = newRecord(Structure.zaznam);
+                    //Record fr = newRecord(Structure.zaznam);
+                    
                     Structure.zaznam.sklizen.setValue(fr, sklizen.getPrimaryKey().getId());
                     Structure.zaznam.knihovna.setValue(fr, conf.getProperty("knihovna"));
                     Structure.zaznam.urlZdroje.setValue(fr, urlZdroje);
-                    String hlavninazev = xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='245']/subfield[@code='a']/text()");
                     Structure.zaznam.hlavniNazev.setValue(fr, hlavninazev);
-                    String typDokumentu = xmlReader.getNodeValue(node, "./metadata/record/controlfield[@tag='990']/text()");
-//                    String leader = xmlReader.getNodeValue(node, "./metadata/record/leader/text()");
-//                    if (leader != null && leader.length() > 9) {
-//                        typDokumentu = typDokumentu(leader);
-//                        Structure.zaznam.typDokumentu.setValue(fr, typDokumentu);
-//                    }
+//                    String typDokumentu = xmlReader.getNodeValue(node, "./metadata/record/controlfield[@tag='990']/text()");
+                    String leader = xmlReader.getNodeValue(node, "./metadata/record/leader/text()");
+                    if (leader != null && leader.length() > 9) {
+                        String typDokumentu = typDokumentu(leader);
+                        Structure.zaznam.typDokumentu.setValue(fr, typDokumentu);
+                    }
 
                     Structure.zaznam.sourceXML.setValue(fr, xmlStr);
                     rc.addRecord(null, fr, fr, Operation.CREATE);
+                    
 
 
                     //Identifikatory
+                    Record cnb = newSubrecord(fr.getPrimaryKey(), Structure.zaznam.identifikator);
+                    
+                    Structure.identifikator.hodnota.setValue(cnb, cnbStr);
+                    Structure.identifikator.typ.setValue(cnb, "cCNB");
+                    rc.addRecord(null, cnb, cnb, Operation.CREATE);
+                    
                     String isxn = xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='022']/subfield[@code='a']/text()");
                     if (!"".equals(isxn)) {
                         Record ISSN = newSubrecord(fr.getPrimaryKey(), Structure.zaznam.identifikator);
@@ -292,11 +351,6 @@ public class OAIHarvester implements DataSource {
 //                        Structure.identifikator.typ.setValue(ISBN, "ISBN");
 //                        rc.addRecord(null, ISBN, ISBN, Operation.CREATE);
 //                    }
-                    Record cnb = newSubrecord(fr.getPrimaryKey(), Structure.zaznam.identifikator);
-                    String cnbStr = xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='015']/subfield[@code='a']/text()");
-                    Structure.identifikator.hodnota.setValue(cnb, cnbStr);
-                    Structure.identifikator.typ.setValue(cnb, "cCNB");
-                    rc.addRecord(null, cnb, cnb, Operation.CREATE);
 
                     //Autori
                     NodeList autori = xmlReader.getListOfNodes(node, "./metadata/record/datafield[@tag='100']");
@@ -411,6 +465,7 @@ public class OAIHarvester implements DataSource {
                     rc.addRecord(null, sklizen, sklizen, Operation.UPDATE);
                     try {
                         rc = context.getAplikatorService().processRecords(rc);
+                        
                         if (!arguments.dontIndex) {
                             Record z = rc.getRecords().get(0).getEdited();
 //                            Map<String, String> fields = new HashMap<String, String>();
@@ -428,7 +483,7 @@ public class OAIHarvester implements DataSource {
 //                            fields.put("data", xmlStr);
 //                            fields.put("data", "<record />");
 //                            indexer.insertDoc(urlZdroje, fields);
-                            indexer.insertRecord(rc);
+                            //indexer.insertRecord(rc);
                         }
                     } catch (Exception ex) {
                         currentDocsSent--;
@@ -453,6 +508,11 @@ public class OAIHarvester implements DataSource {
     private String getInitialDate() throws Exception {
         String urlString = conf.getProperty("baseUrl") + "?verb=Identify";
 
+        // check interrupted thread
+        if (Thread.currentThread().isInterrupted()) {
+            throw new InterruptedException();
+        }
+        
         URL url = new URL(urlString.replace("\n", ""));
 
         logger.log(Level.FINE, "url: {0}", url.toString());
@@ -474,6 +534,12 @@ public class OAIHarvester implements DataSource {
     }
 
     private String getRecords(String query) throws Exception {
+ 
+        // check interrupted thread
+        if (Thread.currentThread().isInterrupted()) {
+            throw new InterruptedException();
+        }
+        
         String urlString = conf.getProperty("baseUrl") + query;
         URL url = new URL(urlString.replace("\n", ""));
         logFile.newLine();

@@ -1,11 +1,6 @@
 package cz.incad.vdkcr.server.data;
 
 import cz.incad.vdkcr.server.Structure;
-import cz.incad.vdkcr.server.utils.JDBCQueryTemplate;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.List;
-import org.aplikator.client.shared.data.ListItem;
 import org.aplikator.client.shared.data.Record;
 import org.aplikator.server.Context;
 import org.aplikator.server.descriptor.*;
@@ -14,7 +9,6 @@ import org.aplikator.server.persistence.PersisterTriggers;
 import static org.aplikator.server.descriptor.Panel.column;
 import static org.aplikator.server.descriptor.Panel.row;
 import static org.aplikator.server.descriptor.RepeatedForm.repeated;
-import org.aplikator.server.persistence.PersisterFactory;
 
 public class Zaznam extends Entity {
     public Property<String> typDokumentu;
@@ -41,7 +35,7 @@ public class Zaznam extends Entity {
         initFields();
     }
 
-    protected void initFields() {
+    private void initFields() {
         typDokumentu = stringProperty("typDokumentu");
         identifikator = collectionProperty(Structure.identifikator, "identifikator", "zaznam");
         autor = collectionProperty(Structure.autor, "autor", "zaznam");
@@ -62,6 +56,8 @@ public class Zaznam extends Entity {
         addIndex("url_zaznam_idx", true, urlZdroje);
         addIndex("view_zaznam_idx", false, getPrimaryKey(), hlavniNazev, typDokumentu);
         
+        this.setIndexed(true);
+        
         this.setPersistersTriggers(new PersisterTriggers.Default() {
             @Override
             public void onLoad(Record record, Context ctx) {
@@ -79,6 +75,7 @@ public class Zaznam extends Entity {
         retval.addProperty(hlavniNazev).addProperty(typDokumentu);
         retval.setPageSize(20);
         retval.form(column(
+                knihovna,
                 row(hlavniNazev.widget().setSize(9), typDokumentu.widget().setSize(3)),
                 urlZdroje,
                 repeated(identifikator),
