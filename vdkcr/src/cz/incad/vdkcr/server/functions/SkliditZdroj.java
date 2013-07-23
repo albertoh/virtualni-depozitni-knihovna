@@ -2,6 +2,7 @@ package cz.incad.vdkcr.server.functions;
 
 import cz.incad.vdkcr.server.Structure;
 import cz.incad.vdkcr.server.data.Sklizen;
+import cz.incad.vdkcr.server.datasources.AbstractPocessDataSource;
 import cz.incad.vdkcr.server.datasources.DataSource;
 import org.aplikator.client.shared.data.Operation;
 import org.aplikator.client.shared.data.Record;
@@ -25,8 +26,6 @@ public class SkliditZdroj extends Executable {
 
     Logger log = Logger.getLogger(SkliditZdroj.class.getName());
 
-    
-    
     @Override
     public FunctionResult execute(FunctionParameters functionParameters, Context context) {
         Record zdroj = functionParameters.getClientContext().getCurrentRecord();
@@ -37,6 +36,7 @@ public class SkliditZdroj extends Executable {
             DataSource ds = null;
             try {
                 ds = (DataSource) Class.forName(dsName).newInstance();
+
             } catch (Throwable e) {
                 log.log(Level.SEVERE, "Cannot instantiate datasource", e);
                 throw e;
@@ -50,15 +50,37 @@ public class SkliditZdroj extends Executable {
             rc.addRecord(null, sklizen, sklizen, Operation.CREATE);
             rc = context.getAplikatorService().processRecords(rc);
 
-            int sklizeno = ds.harvest(parametrySklizne, rc.getRecords().get(0).getEdited(), context);
 
-            rc = new RecordContainer();
-            Structure.sklizen.stav.setValue(sklizen, Sklizen.Stav.UKONCEN.getValue());
-            Structure.sklizen.ukonceni.setValue(sklizen, new Date());
-            rc.addRecord(null, sklizen, sklizen, Operation.UPDATE);
-            rc = context.getAplikatorService().processRecords(rc);
 
-            return new FunctionResult("Sklizeno " + sklizeno + " záznamů ze zdroje " + zdroj.getValue(Structure.zdroj.nazev.getId()), true);
+            //int sklizeno = ds.harvest(parametrySklizne, rc.getRecords().get(0).getEdited(), context);
+
+            if (ds instanceof AbstractPocessDataSource) {
+                ((AbstractPocessDataSource) ds).runHarvestAsProcess(parametrySklizne, rc.getRecords().get(0).getEdited(), context);
+                
+                /*
+                rc = new RecordContainer();
+                Structure.sklizen.stav.setValue(sklizen, Sklizen.Stav.UKONCEN.getValue());
+                Structure.sklizen.ukonceni.setValue(sklizen, new Date());
+                rc.addRecord(null, sklizen, sklizen, Operation.UPDATE);
+                rc = context.getAplikatorService().processRecords(rc);
+                */
+                
+                return new FunctionResult("Proces bezi ... ", true);
+
+
+            } else {
+                int sklizeno = ds.harvest(parametrySklizne, rc.getRecords().get(0).getEdited(), context);
+
+                rc = new RecordContainer();
+                Structure.sklizen.stav.setValue(sklizen, Sklizen.Stav.UKONCEN.getValue());
+                Structure.sklizen.ukonceni.setValue(sklizen, new Date());
+                rc.addRecord(null, sklizen, sklizen, Operation.UPDATE);
+                rc = context.getAplikatorService().processRecords(rc);
+
+                return new FunctionResult("Sklizeno " + sklizeno + " záznamů ze zdroje " + zdroj.getValue(Structure.zdroj.nazev.getId()), true);
+
+            }
+
         } catch (Throwable t) {
 
             RecordContainer rc = new RecordContainer();
@@ -74,5 +96,4 @@ public class SkliditZdroj extends Executable {
     public WizardPage getWizardPage(String currentPage, boolean forwardFlag, Record currentProcessingRecord, Record clientParameters, Context context) {
         return null;
     }
-    
 }

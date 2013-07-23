@@ -28,7 +28,7 @@ public class Knihovna extends Entity {
         initFields();
     }
 
-    protected void initFields() {
+    private void initFields() {
         code = stringProperty("code");
         nazev = stringProperty("nazev", 512);
         pohled = collectionProperty(Structure.pohled, "identifikator", "zaznam");

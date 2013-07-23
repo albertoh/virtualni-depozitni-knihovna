@@ -27,7 +27,10 @@ import org.aplikator.server.Context;
 import org.aplikator.server.DescriptorRegistry;
 import org.aplikator.server.descriptor.Entity;
 import org.aplikator.server.descriptor.View;
+import org.aplikator.server.persistence.Persister;
+import org.aplikator.server.persistence.PersisterFactory;
 import org.aplikator.server.persistence.search.Search;
+import org.aplikator.server.util.Configurator;
 
 /**
  *
@@ -42,54 +45,18 @@ public class SolrIndexer implements DataSourceIndexer, Search {
     HttpSolrServer server;
     Collection<SolrInputDocument> insertDocs = new ArrayList<SolrInputDocument>();
     List<String> delDocs = new ArrayList<String>();
+    private Persister persister;
+    private static final Integer DEFAULT_TRAVERSE_LEVEL = 4;
+    private static final Boolean DEFAULT_INCLUDE_COLLECTIONS = true;
 
-    private void commit() throws Exception {
-        server.commit();
-    }
-
-    private void check() throws Exception {
-        if (insertDocs.size() >= batchSize) {
-            server.add(insertDocs);
-            server.commit();
-            insertDocs.clear();
-        }
-        if (delDocs.size() >= batchSize) {
-            server.deleteById(delDocs);
-            server.commit();
-            delDocs.clear();
-        }
-    }
-    
-    private Map<String, LukeResponse.FieldInfo> schemaFields;
-    String idField;
-
-    private void getSchemaFields() throws Exception {
-//        SolrQuery query = new SolrQuery(); 
-//        query.setRequestHandler("/schema/version"); 
-//        QueryResponse response = server.query(query); 
-//        Double version = (Double) response.getResponse().get("version"); 
-//        System.out.println(version); 
-
-        LukeRequest sr = new LukeRequest();
-        LukeResponse lr = sr.process(server);
-        
-        
-
-        schemaFields = lr.getFieldInfo();
-//        for (LukeResponse.FieldInfo fi : schemaFields.values()) {
-//            //fi.getFlags()
-//            System.out.println("fi: " + fi.getName());
-//        }
-    }
-
-    @Override
-    public void config(Config config) throws Exception {
+    public SolrIndexer() throws Exception {
+        Config config = Configurator.get().getConfig();
         this.host = config.getString("aplikator.solrHost");
         this.batchSize = config.getInt("aplikator.solrBatchSize");
         this.collection = config.getString("aplikator.solrCollection");
-        
-        this.idField = config.getString("aplikator.solrIdField");
 
+        this.idField = config.getString("aplikator.solrIdField");
+        this.persister = PersisterFactory.getPersister();
 
         server = new HttpSolrServer(host + "/" + collection);
         //server.setMaxRetries(1); // defaults to 0.  > 1 not recommended.
@@ -110,6 +77,49 @@ public class SolrIndexer implements DataSourceIndexer, Search {
         //server.setAllowCompression(true);
 
         getSchemaFields();
+
+    }
+
+    private void commit() throws Exception {
+        server.commit();
+    }
+
+    private void check() throws Exception {
+        if (insertDocs.size() >= batchSize) {
+            server.add(insertDocs);
+            server.commit();
+            insertDocs.clear();
+        }
+        if (delDocs.size() >= batchSize) {
+            server.deleteById(delDocs);
+            server.commit();
+            delDocs.clear();
+        }
+    }
+    private Map<String, LukeResponse.FieldInfo> schemaFields;
+    String idField;
+
+    private void getSchemaFields() throws Exception {
+//        SolrQuery query = new SolrQuery(); 
+//        query.setRequestHandler("/schema/version"); 
+//        QueryResponse response = server.query(query); 
+//        Double version = (Double) response.getResponse().get("version"); 
+//        System.out.println(version); 
+
+        LukeRequest sr = new LukeRequest();
+        LukeResponse lr = sr.process(server);
+
+
+
+        schemaFields = lr.getFieldInfo();
+//        for (LukeResponse.FieldInfo fi : schemaFields.values()) {
+//            //fi.getFlags()
+//            System.out.println("fi: " + fi.getName());
+//        }
+    }
+
+    @Override
+    public void config(Config config) throws Exception {
     }
 
     @Override
@@ -136,10 +146,10 @@ public class SolrIndexer implements DataSourceIndexer, Search {
             Record record = cn.getEdited();
             String entityId = record.getPrimaryKey().getEntityId();
             for (String name : record.getProperties()) {
-                
+
                 String shortName = name.substring("Property:".length());
                 //if(schemaFields.containsKey(shortName)){
-                    doc.addField(shortName, record.getValue(name));
+                doc.addField(shortName, record.getValue(name));
                 //}
                 //System.out.println("name: " + shortName + " val: " + record.getValue(name));
             }
@@ -168,17 +178,17 @@ public class SolrIndexer implements DataSourceIndexer, Search {
         delDocs.add(id);
         check();
     }
-    
-    /* Search implements */
 
+    /* Search implements */
     @Override
     public SearchResult getPagefromSearch(ViewDTO vd, String searchArgument, int pageOffset, int pageSize, Context ctx) {
-        
+
+        System.out.println("vd: " + vd.getEntity().toString());
         ArrayList<Record> records = new ArrayList<Record>();
-        
-		return search(searchArgument, pageOffset,
-				pageSize);
-			// TODO - missing info from entity to create record preview
+
+        return search(searchArgument, pageOffset,
+                pageSize);
+        // TODO - missing info from entity to create record preview
     }
 
     @Override
@@ -188,7 +198,34 @@ public class SolrIndexer implements DataSourceIndexer, Search {
 
     @Override
     public void index(Record record) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        try {
+            SolrInputDocument doc = new SolrInputDocument();
+            doc.addField(idField, record.getPrimaryKey().getId());
+            String entityId = record.getPrimaryKey().getEntityId();
+            for (String name : record.getProperties()) {
+
+                String shortName = name.substring("Property:".length());
+                doc.addField(shortName, record.getValue(name));
+//                System.out.println("name: " + name 
+//                        + " val: " + record.getValue(name));
+                
+            }
+            server.add(doc);
+            server.commit();
+//            insertDocs.add(doc);
+//            check();
+        } catch (Exception ex) {
+            Logger.getLogger(SolrIndexer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    private void processProperty(SolrInputDocument doc, String name, String value){
+        if(name.startsWith("Property")){
+                String shortName = name.substring("Property:".length());
+                doc.addField(shortName, value);
+        }else if(name.startsWith("Collection")){
+            
+        }
     }
 
     @Override
@@ -198,19 +235,20 @@ public class SolrIndexer implements DataSourceIndexer, Search {
 
     @Override
     public SearchResult search(String searchArgument, String type, int offset, int size) {
-        
+
         try {
-            SolrQuery query = new SolrQuery(); 
+            SolrQuery query = new SolrQuery();
             query.setQuery(searchArgument);
             query.setStart(offset);
             query.setRows(size);
-            QueryResponse response = server.query(query); 
-            
-            
+            QueryResponse response = server.query(query);
+
+
             List<Record> records = new ArrayList<Record>();
-            for(SolrDocument sd : response.getResults()){
-                PrimaryKey pk = new PrimaryKey("Zaznam", (Integer)sd.get("id"));
+            for (SolrDocument sd : response.getResults()) {
+                PrimaryKey pk = new PrimaryKey("Zaznam", Integer.parseInt(sd.get("id").toString()));
                 Record record = new Record(pk);
+                record.setPreview("<b>" + sd.getFieldValue("Zaznam.hlavniNazev") + "</b>(" + sd.getFieldValue("Zaznam.knihovna") + ")");
                 records.add(record);
             }
             return new SearchResult(records, response.getResults().getNumFound());
@@ -232,7 +270,9 @@ public class SolrIndexer implements DataSourceIndexer, Search {
 
     @Override
     public void insert(PrimaryKey primaryKey) {
-        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Record newRecord = persister.getCompleteRecord(primaryKey,
+                DEFAULT_TRAVERSE_LEVEL, DEFAULT_INCLUDE_COLLECTIONS);
+        index(newRecord);
     }
 
     @Override
