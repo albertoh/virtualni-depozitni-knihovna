@@ -28,6 +28,7 @@ public class Zaznam extends Entity {
     public Reference<Sklizen> sklizen;
     public Property<String> uzivatel;
     public Property<String> knihovna;
+    public Property<String> uniqueCode;
 
     
     public Zaznam() {
@@ -52,6 +53,7 @@ public class Zaznam extends Entity {
         sourceXML = textProperty("sourceXML");
         sklizen = referenceProperty(Structure.sklizen, "sklizen");
         uzivatel = stringProperty("uzivatel");
+        uniqueCode = stringProperty("uniqueCode");
         knihovna = stringProperty("knihovna").setListProvider(Knihovna.getGroupList());
         addIndex("url_zaznam_idx", true, urlZdroje);
         addIndex("view_zaznam_idx", false, getPrimaryKey(), hlavniNazev, typDokumentu);
@@ -77,7 +79,7 @@ public class Zaznam extends Entity {
         retval.form(column(
                 knihovna,
                 row(hlavniNazev.widget().setSize(9), typDokumentu.widget().setSize(3)),
-                urlZdroje,
+                urlZdroje, uniqueCode,
                 repeated(identifikator),
                 repeated(nazev),
                 repeated(jazyk),

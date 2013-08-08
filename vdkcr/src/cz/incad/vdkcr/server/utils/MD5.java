@@ -27,6 +27,14 @@ public class MD5 {
         //System.out.println(value + " -> " + l);
         return Long.toString(checkSum(generate(value)));
     }
+    
+    public static String generate(String[] params) {
+        String key = "";
+        for(String s: params){
+            key += s.replaceAll(" ", "").toLowerCase();
+        }
+        return generate(key);
+    }
 
     /**
      * 

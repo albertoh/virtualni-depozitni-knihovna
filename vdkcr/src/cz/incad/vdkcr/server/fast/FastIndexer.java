@@ -95,7 +95,7 @@ IContentManagerFactory contentManagerFactory;
     }
 
     @Override
-    public void finish() throws Exception {
+    public void finished() throws Exception {
         sendDeletedRecords();
         sendInsertedRecords();
         sendModifiedRecords();

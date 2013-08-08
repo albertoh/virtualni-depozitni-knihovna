@@ -323,7 +323,7 @@ public class ReindexFast extends Executable {
         try {
             connect();
             getZaznamy();
-            fastIndexer.finish();
+            fastIndexer.finished();
             logger.log(Level.INFO, "Finished");
             return true;
         } catch (Exception ex) {

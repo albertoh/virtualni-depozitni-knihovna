@@ -1,10 +1,13 @@
 package cz.incad.vdkcr.server.data;
 
+import cz.incad.vdkcr.server.Structure;
 import cz.incad.vdkcr.server.utils.JDBCQueryTemplate;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import org.aplikator.client.shared.data.ListItem;
+import org.aplikator.client.shared.data.Record;
+import org.aplikator.server.Context;
 import static org.aplikator.server.descriptor.Panel.column;
 import static org.aplikator.server.descriptor.Panel.row;
 
@@ -13,6 +16,7 @@ import org.aplikator.server.descriptor.ListProvider;
 import org.aplikator.server.descriptor.Property;
 import org.aplikator.server.descriptor.View;
 import org.aplikator.server.persistence.PersisterFactory;
+import org.aplikator.server.persistence.PersisterTriggers;
 
 public class Status extends Entity {
     public Property<String> code;
@@ -23,10 +27,21 @@ public class Status extends Entity {
         initFields();
     }
 
-    protected void initFields() {
+    private void initFields() {
         code = stringProperty("code");
         nazev = stringProperty("nazev", 512);
         addIndex("code_status_idx", true, code);
+        
+        
+        
+        this.setPersistersTriggers(new PersisterTriggers.Default() {
+            @Override
+            public void onLoad(Record record, Context ctx) {
+                record.setPreview("<b>"+record.getValue(Structure.status.nazev.getId())
+                +"</b>");
+            }
+            
+        });
 
     }
 

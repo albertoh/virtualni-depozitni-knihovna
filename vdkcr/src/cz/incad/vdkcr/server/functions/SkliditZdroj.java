@@ -2,6 +2,7 @@ package cz.incad.vdkcr.server.functions;
 
 import cz.incad.vdkcr.server.Structure;
 import cz.incad.vdkcr.server.data.Sklizen;
+import cz.incad.vdkcr.server.data.SklizenStatus;
 import cz.incad.vdkcr.server.datasources.AbstractPocessDataSource;
 import cz.incad.vdkcr.server.datasources.DataSource;
 import org.aplikator.client.shared.data.Operation;
@@ -46,7 +47,7 @@ public class SkliditZdroj extends Executable {
             sklizen = newSubrecord(zdroj.getPrimaryKey(), Structure.zdroj.sklizen);
             Structure.sklizen.pocet.setValue(sklizen, 0);
             Structure.sklizen.spusteni.setValue(sklizen, new Date());
-            Structure.sklizen.stav.setValue(sklizen, Sklizen.Stav.ZAHAJEN.getValue());
+            Structure.sklizen.stav.setValue(sklizen, SklizenStatus.Stav.ZAHAJEN.getValue());
             rc.addRecord(null, sklizen, sklizen, Operation.CREATE);
             rc = context.getAplikatorService().processRecords(rc);
 
@@ -72,7 +73,7 @@ public class SkliditZdroj extends Executable {
                 int sklizeno = ds.harvest(parametrySklizne, rc.getRecords().get(0).getEdited(), context);
 
                 rc = new RecordContainer();
-                Structure.sklizen.stav.setValue(sklizen, Sklizen.Stav.UKONCEN.getValue());
+                Structure.sklizen.stav.setValue(sklizen, SklizenStatus.Stav.UKONCEN.getValue());
                 Structure.sklizen.ukonceni.setValue(sklizen, new Date());
                 rc.addRecord(null, sklizen, sklizen, Operation.UPDATE);
                 rc = context.getAplikatorService().processRecords(rc);
@@ -84,7 +85,7 @@ public class SkliditZdroj extends Executable {
         } catch (Throwable t) {
 
             RecordContainer rc = new RecordContainer();
-            Structure.sklizen.stav.setValue(sklizen, Sklizen.Stav.CHYBA.getValue());
+            Structure.sklizen.stav.setValue(sklizen, SklizenStatus.Stav.CHYBA.getValue());
             rc.addRecord(null, sklizen, sklizen, Operation.UPDATE);
             rc = context.getAplikatorService().processRecords(rc);
 

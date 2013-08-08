@@ -2,6 +2,7 @@ package cz.incad.vdkcr.server.index.solr;
 
 import com.typesafe.config.Config;
 import cz.incad.vdkcr.server.index.DataSourceIndexer;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -24,27 +25,24 @@ import org.aplikator.client.shared.data.SearchResult;
 import org.aplikator.client.shared.descriptor.EntityDTO;
 import org.aplikator.client.shared.descriptor.ViewDTO;
 import org.aplikator.server.Context;
-import org.aplikator.server.DescriptorRegistry;
-import org.aplikator.server.descriptor.Entity;
-import org.aplikator.server.descriptor.View;
 import org.aplikator.server.persistence.Persister;
 import org.aplikator.server.persistence.PersisterFactory;
+import org.aplikator.server.persistence.Transaction;
 import org.aplikator.server.persistence.search.Search;
 import org.aplikator.server.util.Configurator;
+import org.jboss.errai.marshalling.client.Marshalling;
 
 /**
  *
  * @author alberto
  */
-public class SolrIndexer implements DataSourceIndexer, Search {
+public class SolrIndexer implements Search {
 
     private static final Logger logger = Logger.getLogger(SolrIndexer.class.getName());
     private String host;
     private String collection;
-    private int batchSize;
     HttpSolrServer server;
-    Collection<SolrInputDocument> insertDocs = new ArrayList<SolrInputDocument>();
-    List<String> delDocs = new ArrayList<String>();
+    private Transaction tx;
     private Persister persister;
     private static final Integer DEFAULT_TRAVERSE_LEVEL = 4;
     private static final Boolean DEFAULT_INCLUDE_COLLECTIONS = true;
@@ -52,11 +50,10 @@ public class SolrIndexer implements DataSourceIndexer, Search {
     public SolrIndexer() throws Exception {
         Config config = Configurator.get().getConfig();
         this.host = config.getString("aplikator.solrHost");
-        this.batchSize = config.getInt("aplikator.solrBatchSize");
         this.collection = config.getString("aplikator.solrCollection");
 
         this.idField = config.getString("aplikator.solrIdField");
-        this.persister = PersisterFactory.getPersister();
+        persister = PersisterFactory.getPersister();
 
         server = new HttpSolrServer(host + "/" + collection);
         //server.setMaxRetries(1); // defaults to 0.  > 1 not recommended.
@@ -84,17 +81,17 @@ public class SolrIndexer implements DataSourceIndexer, Search {
         server.commit();
     }
 
-    private void check() throws Exception {
-        if (insertDocs.size() >= batchSize) {
-            server.add(insertDocs);
-            server.commit();
-            insertDocs.clear();
-        }
-        if (delDocs.size() >= batchSize) {
-            server.deleteById(delDocs);
-            server.commit();
-            delDocs.clear();
-        }
+    private void check2() throws Exception {
+//        if (insertDocs.size() >= batchSize) {
+//            server.add(insertDocs);
+//            server.commit();
+//            insertDocs.clear();
+//        }
+//        if (delDocs.size() >= batchSize) {
+//            server.deleteById(delDocs);
+//            server.commit();
+//            delDocs.clear();
+//        }
     }
     private Map<String, LukeResponse.FieldInfo> schemaFields;
     String idField;
@@ -119,24 +116,17 @@ public class SolrIndexer implements DataSourceIndexer, Search {
     }
 
     @Override
-    public void config(Config config) throws Exception {
-    }
+    public void finish() {
+        try {
+            server.commit();
 
-    @Override
-    public void finish() throws Exception {
-        if (!insertDocs.isEmpty()) {
-            server.add(insertDocs);
-            server.commit();
-            insertDocs.clear();
-        }
-        if (!delDocs.isEmpty()) {
-            server.deleteById(delDocs);
-            server.commit();
-            delDocs.clear();
+        } catch (SolrServerException ex) {
+            Logger.getLogger(SolrIndexer.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(SolrIndexer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    @Override
     public void insertRecord(RecordContainer rc) throws Exception {
 
         //System.out.println("rc: " + Marshalling.toJSON(rc));
@@ -151,32 +141,30 @@ public class SolrIndexer implements DataSourceIndexer, Search {
                 //if(schemaFields.containsKey(shortName)){
                 doc.addField(shortName, record.getValue(name));
                 //}
-                //System.out.println("name: " + shortName + " val: " + record.getValue(name));
+                System.out.println("name: " + shortName + " val: " + record.getValue(name));
             }
         }
-        insertDocs.add(doc);
-        check();
+        server.add(doc);
+        server.commit();
     }
 
-    @Override
     public void insertDoc(String id, Map<String, String> fields) throws Exception {
         SolrInputDocument doc = new SolrInputDocument();
         for (String name : fields.keySet()) {
             doc.addField(name, fields.get(name));
         }
-        insertDocs.add(doc);
-        check();
+        server.add(doc);
+        server.commit();
     }
 
-    @Override
     public void updateDoc(String id, Map<String, String> fields) throws Exception {
         insertDoc(id, fields);
     }
 
-    @Override
     public void removeDoc(String id) throws Exception {
-        delDocs.add(id);
-        check();
+
+        server.deleteById(id);
+        server.commit();
     }
 
     /* Search implements */
@@ -201,30 +189,32 @@ public class SolrIndexer implements DataSourceIndexer, Search {
         try {
             SolrInputDocument doc = new SolrInputDocument();
             doc.addField(idField, record.getPrimaryKey().getId());
-            String entityId = record.getPrimaryKey().getEntityId();
             for (String name : record.getProperties()) {
-
-                String shortName = name.substring("Property:".length());
-                doc.addField(shortName, record.getValue(name));
-//                System.out.println("name: " + name 
+//                System.out.println("name: " + name
 //                        + " val: " + record.getValue(name));
-                
+                processProperty(doc, name, record.getValue(name));
             }
             server.add(doc);
             server.commit();
-//            insertDocs.add(doc);
-//            check();
         } catch (Exception ex) {
             Logger.getLogger(SolrIndexer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
-    private void processProperty(SolrInputDocument doc, String name, String value){
-        if(name.startsWith("Property")){
-                String shortName = name.substring("Property:".length());
-                doc.addField(shortName, value);
-        }else if(name.startsWith("Collection")){
-            
+
+    private void processProperty(SolrInputDocument doc, String name, Object value) {
+        if (name.startsWith("Property")) {
+            String shortName = name.substring("Property:".length());
+            doc.addField(shortName, value==null?"":value);
+        } else if (name.startsWith("Collection")) {
+            if (value != null) {
+                ArrayList<Record> r = (ArrayList<Record>) value;
+                for (Record record : r) {
+                    for (String p : record.getProperties()) {
+                        processProperty(doc, p, record.getValue(p));
+
+                    }
+                }
+            }
         }
     }
 
@@ -267,16 +257,22 @@ public class SolrIndexer implements DataSourceIndexer, Search {
     public void update(PrimaryKey primaryKey) {
         //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-
+    
     @Override
     public void insert(PrimaryKey primaryKey) {
-        Record newRecord = persister.getCompleteRecord(primaryKey,
-                DEFAULT_TRAVERSE_LEVEL, DEFAULT_INCLUDE_COLLECTIONS);
+        Record newRecord =  persister.getCompleteRecord(primaryKey,
+                DEFAULT_TRAVERSE_LEVEL, DEFAULT_INCLUDE_COLLECTIONS, tx);
         index(newRecord);
     }
 
     @Override
     public void delete(PrimaryKey primaryKey) {
         //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void init(Transaction tx) {
+
+        this.tx = tx;
     }
 }

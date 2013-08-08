@@ -206,7 +206,7 @@ public class K4Harvester implements DataSource {
         }
         update(sdfoai.format(c_from.getTime()), sdfoai.format(final_date));
         if (!arguments.onlyHarvest) {
-            fastIndexer.finish();
+            fastIndexer.finished();
         }
 
     }
@@ -429,7 +429,7 @@ public class K4Harvester implements DataSource {
         File dir = new File(conf.getProperty("indexDirectory"));
         getRecordsFromDir(dir);
         if (!arguments.onlyHarvest) {
-            fastIndexer.finish();
+            fastIndexer.finished();
         }
     }
 

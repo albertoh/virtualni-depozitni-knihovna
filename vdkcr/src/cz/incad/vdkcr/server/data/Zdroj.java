@@ -34,7 +34,7 @@ public class Zdroj extends Entity {
         initFields();
     }
 
-    protected void initFields() {
+    private void initFields() {
         typZdroje = stringProperty("typZdroje");
         nazev = stringProperty("nazev");
         formatXML = stringProperty("formatXML");

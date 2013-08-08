@@ -3,8 +3,6 @@ package cz.incad.vdkcr.server;
 import org.aplikator.server.descriptor.Application;
 
 import cz.incad.vdkcr.server.data.*;
-import cz.incad.vdkcr.server.data.triggers.SklizenTrigger;
-import cz.incad.vdkcr.server.data.triggers.ZaznamTrigger;
 
 public class Structure extends Application {
 

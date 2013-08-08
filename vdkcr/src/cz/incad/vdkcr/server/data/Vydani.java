@@ -19,7 +19,7 @@ public class Vydani extends Entity {
 
     protected void initFields() {
         oznaceni = stringProperty("oznaceni");
-        nakladatel = stringProperty("nakladatel");
+        nakladatel = stringProperty("nakladatel", 1024);
         misto = stringProperty("misto");
         datum = stringProperty("datum");
     }
