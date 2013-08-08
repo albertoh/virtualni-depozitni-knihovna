@@ -1,6 +1,7 @@
 package cz.incad.vdkcr.server.data;
 
 import cz.incad.vdkcr.server.Structure;
+import cz.incad.vdkcr.server.functions.KnihovnaPohled;
 import cz.incad.vdkcr.server.utils.JDBCQueryTemplate;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -12,9 +13,14 @@ import org.aplikator.server.descriptor.Collection;
 import static org.aplikator.server.descriptor.Panel.column;
 
 import org.aplikator.server.descriptor.Entity;
+import org.aplikator.server.descriptor.Function;
+//import org.aplikator.server.descriptor.Link;
 import org.aplikator.server.descriptor.ListProvider;
+import static org.aplikator.server.descriptor.Panel.row;
 import org.aplikator.server.descriptor.Property;
+import static org.aplikator.server.descriptor.RepeatedForm.repeated;
 import org.aplikator.server.descriptor.View;
+import org.aplikator.server.descriptor.WizardPage;
 import org.aplikator.server.persistence.PersisterFactory;
 import org.aplikator.server.persistence.PersisterTriggers;
 
@@ -22,6 +28,31 @@ public class Knihovna extends Entity {
     public Property<String> code;
     public Property<String> nazev;
     public Collection<Pohled> pohled;
+    public Function knihovnaPohled = new Function("KnihovnaPohled", "KnihovnaPohled", new KnihovnaPohled());
+    
+     {
+
+        WizardPage p1 = new WizardPage(knihovnaPohled, "first");
+        Property<String> p1input = p1.stringProperty("finput", 3);
+        Property<String> status = p1.stringProperty("status", 3);
+        status.setListProvider(Status.getGroupList());
+        p1.form(row(
+                column(p1input, status)
+        ), false);
+        
+        WizardPage p2 = new WizardPage(knihovnaPohled, "second");
+        Property<String> p2prop = p2.stringProperty("sinput", 3);
+        
+        
+        
+        p2.form(
+                row(
+                    row(column(p2prop))
+                
+        ), false);
+
+        
+    }
 
     public Knihovna() {
         super("Knihovna","Knihovna","Knihovna_ID");
@@ -48,10 +79,12 @@ public class Knihovna extends Entity {
     @Override
     protected View initDefaultView() {
         View retval = new View(this);
+//        Link link = new Link("view", "org.aplikator.client.local.command.ListEntities:View:Zaznam", code);
         retval.addProperty(code).addProperty(nazev);
         retval.form(column(
-                code,
-                nazev
+                row(column(code).setSize(3), column(nazev).setSize(6)),// column(link).setSize(2)),
+                row(knihovnaPohled),
+                row(repeated(pohled))
             ));
         return retval;
     }

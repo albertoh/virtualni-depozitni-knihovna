@@ -161,13 +161,13 @@ public class Indexer implements DataSource {
             processRecord(rs, IndexTypes.INSERTED);
         }
         rs.close();
-        fastIndexer.finish();
+        fastIndexer.finished();
     }
 
     private void update(String from, String to) throws Exception {
         getUpdatedRecords(from, to);
         getDeletedRecords(from, to);
-        fastIndexer.finish();
+        fastIndexer.finished();
     }
 
     private void getUpdatedRecords(String from, String to) throws Exception {
