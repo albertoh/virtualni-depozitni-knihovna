@@ -1,14 +1,6 @@
 package cz.incad.vdkcr.server.index.solr;
 
 import com.typesafe.config.Config;
-import cz.incad.vdkcr.server.index.DataSourceIndexer;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
@@ -17,19 +9,21 @@ import org.apache.solr.client.solrj.response.LukeResponse;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrInputDocument;
-import org.aplikator.client.shared.data.ContainerNode;
-import org.aplikator.client.shared.data.PrimaryKey;
-import org.aplikator.client.shared.data.Record;
-import org.aplikator.client.shared.data.RecordContainer;
-import org.aplikator.client.shared.data.SearchResult;
+import org.aplikator.client.shared.data.*;
 import org.aplikator.client.shared.descriptor.EntityDTO;
-import org.aplikator.client.shared.descriptor.ViewDTO;
 import org.aplikator.server.Context;
 import org.aplikator.server.persistence.Persister;
 import org.aplikator.server.persistence.PersisterFactory;
 import org.aplikator.server.persistence.Transaction;
 import org.aplikator.server.persistence.search.Search;
 import org.aplikator.server.util.Configurator;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -200,6 +194,7 @@ public class SolrIndexer implements Search {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void processProperty(SolrInputDocument doc, String name, Object value) {
         if (name.startsWith("Property")) {
             String shortName = name.substring("Property:".length());
