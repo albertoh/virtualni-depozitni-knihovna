@@ -62,7 +62,7 @@ public class Knihovna extends Entity {
     private void initFields() {
         code = stringProperty("code");
         nazev = stringProperty("nazev", 512);
-        pohled = collectionProperty(Structure.pohled, "identifikator", "zaznam");
+        pohled = collectionProperty(Structure.pohled, "knihovna", "knihovna");
         addIndex("code_knihovna_idx", true, code);
         
         this.setPersistersTriggers(new PersisterTriggers.Default() {
@@ -89,21 +89,21 @@ public class Knihovna extends Entity {
         return retval;
     }
     
-    public static ListProvider<String> getGroupList() {
+    public static ListProvider getGroupList() {
         String query = "select code, nazev from knihovna";
         
-        List<ListItem<String>> groupsList = new JDBCQueryTemplate<ListItem<String>>(PersisterFactory.getPersister().getJDBCConnection()) {
+        List<ListItem> groupsList = new JDBCQueryTemplate<ListItem>(PersisterFactory.getPersister().getJDBCConnection()) {
             @Override
-            public boolean handleRow(ResultSet rs, List<ListItem<String>> retList) throws SQLException {
+            public boolean handleRow(ResultSet rs, List<ListItem> retList) throws SQLException {
                 String id = rs.getString("code");
                 String name = rs.getString("nazev");
-                retList.add(new ListItem.Default<String>(id, name));
+                retList.add(new ListItem.Default(id, name));
                 return true;
             }
 
         }.executeQuery(query);
 
-        return new ListProvider.Default<String>(groupsList);
+        return new ListProvider.Default(groupsList);
     }
 
 }

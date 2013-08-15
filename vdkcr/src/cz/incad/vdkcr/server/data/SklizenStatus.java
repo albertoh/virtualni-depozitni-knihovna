@@ -17,7 +17,7 @@ import org.jboss.errai.common.client.api.annotations.Portable;
 @Portable
 public class SklizenStatus {
     
-    static class DefaultListItem implements ListItem<String>{
+    static class DefaultListItem implements ListItem{
         private String name;
         private String value;
 
@@ -58,11 +58,11 @@ public class SklizenStatus {
     
     //private Map<Stav, String> map = new HashMap<Stav, String>();
     
-    public static ListProvider<String> getGroupList() {
-        List<ListItem<String>> returnsList = new ArrayList<ListItem<String>>();
+    public static ListProvider getGroupList() {
+        List<ListItem> returnsList = new ArrayList<ListItem>();
         for(Stav s: Stav.values()){
             returnsList.add(new DefaultListItem(s.getName(), s.getValue()));
         }
-        return new ListProvider.Default<String>(returnsList);
+        return new ListProvider.Default(returnsList);
     }
 }

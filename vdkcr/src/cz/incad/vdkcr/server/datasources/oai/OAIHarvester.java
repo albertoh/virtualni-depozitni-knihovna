@@ -289,12 +289,12 @@ public class OAIHarvester extends AbstractPocessDataSource {
                     Record unique;
                     //Record fr;
         
-                    List<ListItem<Integer>> uniqueList = new JDBCQueryTemplate<ListItem<Integer>>(PersisterFactory.getPersister().getJDBCConnection()) {
+                    List<ListItem> uniqueList = new JDBCQueryTemplate<ListItem>(PersisterFactory.getPersister().getJDBCConnection()) {
                         @Override
-                        public boolean handleRow(ResultSet rs, List<ListItem<Integer>> retList) throws SQLException {
+                        public boolean handleRow(ResultSet rs, List<ListItem> retList) throws SQLException {
                             Integer id = rs.getInt("UniqueDoc_ID");
                             String code = rs.getString("code");
-                            retList.add(new ListItem.Default<Integer>(id, code));
+                            retList.add(new ListItem.Default(id, code));
                             return true;
                         }
 

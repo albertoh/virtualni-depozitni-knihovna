@@ -22,7 +22,7 @@ public class ZaznamTrigger extends PersisterTriggers.Default {
         System.out.println("Before create trigger");
         HttpServletRequest request = ctx.getHttpServletRequest();
         String remoteUser = request.getRemoteUser();
-        PropertyDTO<String> uzivatel = Structure.zaznam.uzivatel.clientClone(ctx);
+        PropertyDTO uzivatel = Structure.zaznam.uzivatel.clientClone(ctx);
         if (remoteUser != null) {
             uzivatel.setValue(record, remoteUser);
         } else {

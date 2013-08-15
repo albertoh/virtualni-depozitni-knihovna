@@ -30,7 +30,6 @@ import org.aplikator.server.persistence.PersisterFactory;
 import org.aplikator.server.persistence.Transaction;
 import org.aplikator.server.persistence.search.Search;
 import org.aplikator.server.util.Configurator;
-import org.jboss.errai.marshalling.client.Marshalling;
 
 /**
  *
@@ -169,9 +168,9 @@ public class SolrIndexer implements Search {
 
     /* Search implements */
     @Override
-    public SearchResult getPagefromSearch(ViewDTO vd, String searchArgument, int pageOffset, int pageSize, Context ctx) {
+    public SearchResult getPagefromSearch(String vdId, String searchArgument, int pageOffset, int pageSize, Context ctx) {
 
-        System.out.println("vd: " + vd.getEntity().toString());
+        //System.out.println("vd: " + vd.getEntity().toString());
         ArrayList<Record> records = new ArrayList<Record>();
 
         return search(searchArgument, pageOffset,
