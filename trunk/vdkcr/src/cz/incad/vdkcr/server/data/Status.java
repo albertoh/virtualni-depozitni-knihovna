@@ -56,21 +56,21 @@ public class Status extends Entity {
         return retval;
     }
     
-    public static ListProvider<String> getGroupList() {
+    public static ListProvider getGroupList() {
         String query = "select code, nazev from status";
         
-        List<ListItem<String>> groupsList = new JDBCQueryTemplate<ListItem<String>>(PersisterFactory.getPersister().getJDBCConnection()) {
+        List groupsList = new JDBCQueryTemplate<ListItem>(PersisterFactory.getPersister().getJDBCConnection()) {
             @Override
-            public boolean handleRow(ResultSet rs, List<ListItem<String>> retList) throws SQLException {
+            public boolean handleRow(ResultSet rs, List retList) throws SQLException {
                 String id = rs.getString("code");
                 String name = rs.getString("nazev");
-                retList.add(new ListItem.Default<String>(id, name));
+                retList.add(new ListItem.Default(id, name));
                 return true;
             }
 
         }.executeQuery(query);
 
-        return new ListProvider.Default<String>(groupsList);
+        return new ListProvider.Default(groupsList);
     }
 
 }

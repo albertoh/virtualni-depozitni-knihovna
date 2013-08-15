@@ -25,7 +25,7 @@ public class SklizenTrigger extends PersisterTriggers.Default{
         HttpServletRequest request = ctx.getHttpServletRequest();
         String remoteUser = request.getRemoteUser();
         record.setValue(remoteUser, request);
-        PropertyDTO<String> uzivatel = Structure.sklizen.uzivatel.clientClone(ctx);
+        PropertyDTO uzivatel = Structure.sklizen.uzivatel.clientClone(ctx);
         if (remoteUser != null) {
             uzivatel.setValue(record, remoteUser);
         } else {
