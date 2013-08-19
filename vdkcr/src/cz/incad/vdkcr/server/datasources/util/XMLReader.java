@@ -57,6 +57,10 @@ public class XMLReader {
             XPathFactory factory = XPathFactory.newInstance();
             xpath = factory.newXPath();
     }
+    
+    public Document getDoc(){
+        return doc;
+    }
 
     public void loadXmlFromFile(File file) {
         try {

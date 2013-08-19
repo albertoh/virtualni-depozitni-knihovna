@@ -25,7 +25,6 @@ public class VdkcrLoaderServlet extends ApplicationLoaderServlet {
             struct = (Structure) Application.get();
             Menu records = new Menu("Zaznamy");
             records.addView(Structure.zaznam.view());
-            records.addView(Structure.uniquedoc.view());
             struct.addMenu(records);
             Menu admin = new Menu("Admin");
             admin.addView(Structure.zdroj.view());
