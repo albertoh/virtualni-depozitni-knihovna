@@ -276,42 +276,6 @@ public class Indexer implements DataSource {
             rc.addRecord(null, fr, fr, Operation.CREATE);
 
 
-            //Identifikatory
-            Record ISSN = newSubrecord(fr.getPrimaryKey(), Structure.zaznam.identifikator);
-            Structure.identifikator.hodnota.setValue(ISSN, rs.getString("ISSN"));
-            Structure.identifikator.typ.setValue(ISSN, "ISSN");
-            rc.addRecord(null, ISSN, ISSN, Operation.CREATE);
-
-            Record ISBN = newSubrecord(fr.getPrimaryKey(), Structure.zaznam.identifikator);
-            Structure.identifikator.hodnota.setValue(ISBN, rs.getString("ISBN"));
-            Structure.identifikator.typ.setValue(ISBN, "ISBN");
-            rc.addRecord(null, ISBN, ISBN, Operation.CREATE);
-
-            Record cnb = newSubrecord(fr.getPrimaryKey(), Structure.zaznam.identifikator);
-            String cnbStr = rs.getString("ccnb");
-            Structure.identifikator.hodnota.setValue(cnb, cnbStr);
-            Structure.identifikator.typ.setValue(cnb, "cCNB");
-            rc.addRecord(null, cnb, cnb, Operation.CREATE);
-
-            //Autori
-            Record autor = newSubrecord(fr.getPrimaryKey(), Structure.zaznam.autor);
-            Structure.autor.nazev.setValue(autor, rs.getString("autor"));
-            rc.addRecord(null, autor, autor, Operation.CREATE);
-
-
-            //Nazvy
-            Record j = newSubrecord(fr.getPrimaryKey(), Structure.zaznam.nazev);
-            Structure.nazev.nazev.setValue(j, rs.getString("podnazev"));
-            Structure.nazev.typNazvu.setValue(j, "Podnázev");
-            rc.addRecord(null, j, j, Operation.CREATE);
-
-            //Exemplar
-            Record exemplar = newSubrecord(fr.getPrimaryKey(), Structure.zaznam.exemplar);
-            Structure.exemplar.carovyKod.setValue(exemplar, rs.getString("carkod"));
-            Structure.exemplar.signatura.setValue(exemplar, rs.getString("signatura"));
-            Structure.exemplar.rok.setValue(exemplar, rs.getString("rokVyd"));
-            rc.addRecord(null, exemplar, exemplar, Operation.CREATE);
-
             Structure.sklizen.pocet.setValue(sklizen, processed++);
             rc.addRecord(null, sklizen, sklizen, Operation.UPDATE);
 

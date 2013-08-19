@@ -246,78 +246,7 @@ public class K4Harvester implements DataSource {
                     String xmlStr = nodeToString(node);
                     Structure.zaznam.sourceXML.setValue(fr, xmlStr);
                     rc.addRecord(null, fr, fr, Operation.CREATE);
-
-                    //Identifikatory
-                    NodeList ids  = xmlReader.getListOfNodes(node, "./metadata/record/descriptor/modsCollection/mods/identifier");
-                    for(int i = 0; i < ids.getLength(); i++){
-                        Node identifikator = ids.item(i);
-                        if(identifikator.hasChildNodes()){
-                            Record rId = newSubrecord(fr.getPrimaryKey(), Structure.zaznam.identifikator);
-                            Structure.identifikator.hodnota.setValue(rId, identifikator.getFirstChild().getNodeValue());
-                            Structure.identifikator.typ.setValue(rId, identifikator.getAttributes().getNamedItem("type").getNodeValue());
-                            rc.addRecord(null, rId, rId, Operation.CREATE);
-                        }
-                    }
-
-                    //Autori
-                    NodeList autori = xmlReader.getListOfNodes(node, "./metadata/record/descriptor/modsCollection/mods/name");
-                    String autoriStr = "";
-                    for (int i = 0; i < autori.getLength(); i++) {
-                        Record autor = newSubrecord(fr.getPrimaryKey(), Structure.zaznam.autor);
-                        String prijmeni = xmlReader.getNodeValue(node, "./metadata/record/descriptor/modsCollection/mods/name[position()=" + (i + 1) + "]/namePart[@type='family']/text()");
-                        Structure.autor.prijmeni.setValue(autor, prijmeni);
-                        String jmeno = xmlReader.getNodeValue(node, "./metadata/record/descriptor/modsCollection/mods/name[position()=" + (i + 1) + "]/namePart[@type='given']/text()");
-                        Structure.autor.jmeno.setValue(autor, jmeno);
-                        Structure.autor.nazev.setValue(autor, prijmeni + ", " + jmeno);
-                        //String role = xmlReader.getNodeValue(node, "./metadata/record/descriptor/modsCollection/mods/name[position()=" + (i + 1) + "]/role/roleTerm[@type='text']/text()");
-                        Structure.autor.odpovednost.setValue(autor, jmeno);
-                        autoriStr += prijmeni + ", " + jmeno + ";";
-                        rc.addRecord(null, autor, autor, Operation.CREATE);
-                    }
-
-                    //Jazyky
-                    String[] jazyky = xmlReader.getListOfValues(node, "./metadata/record/descriptor/modsCollection/mods/language/languageTerm/text()");
-                    for (String jazyk : jazyky) {
-                        Record j = newSubrecord(fr.getPrimaryKey(), Structure.zaznam.jazyk);
-                        Structure.jazyk.kod.setValue(j, jazyk);
-                        rc.addRecord(null, j, j, Operation.CREATE);
-                    }
-
-                    //Nazvy
-                    NodeList nazvy = xmlReader.getListOfNodes(node, "./metadata/record/descriptor/modsCollection/mods/titleInfo");
-                    for (int i = 0; i < nazvy.getLength(); i++) {
-                        //Node nazev = nazvy.item(i);
-                        Record j = newSubrecord(fr.getPrimaryKey(), Structure.zaznam.nazev);
-                        //Structure.nazev.nazev.setValue(j, nazev);
-                        //Structure.nazev.typNazvu.setValue(j, "Hlavní název");
-                        rc.addRecord(null, j, j, Operation.CREATE);
-                    }
-
-
-                    //Zpracování exemplářů - ITM
-
-                    NodeList exs = xmlReader.getListOfNodes(node, "./metadata/record/datafield[@tag='996']");
-                    //String exsStr = "";
-                    for (int i = 0; i < exs.getLength(); i++) {
-                        Record ex = newSubrecord(fr.getPrimaryKey(), Structure.zaznam.exemplar);
-                        //String exStr = xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='996'][position()=" + (i + 1) + "]/subfield[@code='b']/text()");
-                        Structure.exemplar.carovyKod.setValue(ex,
-                                xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='996'][position()=" + (i + 1) + "]/subfield[@code='b']/text()"));
-                        Structure.exemplar.signatura.setValue(ex,
-                                xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='996'][position()=" + (i + 1) + "]/subfield[@code='c']/text()"));
-                        Structure.exemplar.popis.setValue(ex,
-                                xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='996'][position()=" + (i + 1) + "]/subfield[@code='d']/text()"));
-                        Structure.exemplar.svazek.setValue(ex,
-                                xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='996'][position()=" + (i + 1) + "]/subfield[@code='v']/text()"));
-                        Structure.exemplar.rok.setValue(ex,
-                                xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='996'][position()=" + (i + 1) + "]/subfield[@code='y']/text()"));
-                        Structure.exemplar.cislo.setValue(ex,
-                                xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='996'][position()=" + (i + 1) + "]/subfield[@code='i']/text()"));
-                        //exsStr += exStr + ";";
-                        rc.addRecord(null, ex, ex, Operation.CREATE);
-                    }
-
-
+                    
 
                     rc.addRecord(null, sklizen, sklizen, Operation.UPDATE);
 
@@ -331,7 +260,6 @@ public class K4Harvester implements DataSource {
                         doc.addElement(DocumentFactory.newInteger("dbid", z.getPrimaryKey().getId()));
                         doc.addElement(DocumentFactory.newString("url", urlZdroje));
                         doc.addElement(DocumentFactory.newString("druhdokumentu", typDokumentu));
-                        doc.addElement(DocumentFactory.newString("autor", autoriStr));
                         doc.addElement(DocumentFactory.newString("zdroj", conf.getProperty("zdroj")));
                         doc.addElement(DocumentFactory.newString("isxn",
                                 xmlReader.getNodeValue(node, "./metadata/record/descriptor/modsCollection/mods/identifier[@type='issn' or @type='isbn']/text()")));

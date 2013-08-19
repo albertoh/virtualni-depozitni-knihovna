@@ -1,6 +1,24 @@
 package cz.incad.vdkcr.server.index.solr;
 
 import com.typesafe.config.Config;
+import cz.incad.vdkcr.server.index.DataSourceIndexer;
+import java.io.File;
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
@@ -17,6 +35,7 @@ import org.aplikator.server.persistence.PersisterFactory;
 import org.aplikator.server.persistence.Transaction;
 import org.aplikator.server.persistence.search.Search;
 import org.aplikator.server.util.Configurator;
+import org.w3c.dom.Document;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -39,11 +58,16 @@ public class SolrIndexer implements Search {
     private Persister persister;
     private static final Integer DEFAULT_TRAVERSE_LEVEL = 4;
     private static final Boolean DEFAULT_INCLUDE_COLLECTIONS = true;
+    Transformer transformer;
+    URL solrUrl;
+    String xsl;
+    SolrIndexerCommiter commiter;
 
     public SolrIndexer() throws Exception {
         Config config = Configurator.get().getConfig();
         this.host = config.getString("aplikator.solrHost");
         this.collection = config.getString("aplikator.solrCollection");
+        this.xsl = config.getString("aplikator.solrXsl");
 
         this.idField = config.getString("aplikator.solrIdField");
         persister = PersisterFactory.getPersister();
@@ -66,12 +90,19 @@ public class SolrIndexer implements Search {
         // Server side must support gzip or deflate for this to have any effect.
         //server.setAllowCompression(true);
 
-        getSchemaFields();
+        commiter = new SolrIndexerCommiter();
+
+        TransformerFactory tfactory = TransformerFactory.newInstance();
+        StreamSource xslt = new StreamSource(new File(this.xsl));
+        transformer = tfactory.newTransformer(xslt);
+        solrUrl = new URL(this.host + "/update");
 
     }
 
-    private void commit() throws Exception {
-        server.commit();
+    public void commit() throws Exception {
+        //server.commit();
+        
+        SolrIndexerCommiter.postData(this.solrUrl, "<commit/>");
     }
 
     private void check2() throws Exception {
@@ -86,27 +117,7 @@ public class SolrIndexer implements Search {
 //            delDocs.clear();
 //        }
     }
-    private Map<String, LukeResponse.FieldInfo> schemaFields;
     String idField;
-
-    private void getSchemaFields() throws Exception {
-//        SolrQuery query = new SolrQuery(); 
-//        query.setRequestHandler("/schema/version"); 
-//        QueryResponse response = server.query(query); 
-//        Double version = (Double) response.getResponse().get("version"); 
-//        System.out.println(version); 
-
-        LukeRequest sr = new LukeRequest();
-        LukeResponse lr = sr.process(server);
-
-
-
-        schemaFields = lr.getFieldInfo();
-//        for (LukeResponse.FieldInfo fi : schemaFields.values()) {
-//            //fi.getFlags()
-//            System.out.println("fi: " + fi.getName());
-//        }
-    }
 
     @Override
     public void finish() {
@@ -120,45 +131,45 @@ public class SolrIndexer implements Search {
         }
     }
 
-    public void insertRecord(RecordContainer rc) throws Exception {
-
-        //System.out.println("rc: " + Marshalling.toJSON(rc));
-        SolrInputDocument doc = new SolrInputDocument();
-        doc.addField(idField, rc.getRecords().get(0).getEdited().getPrimaryKey().getId());
-        for (ContainerNode cn : rc.getRecords()) {
-            Record record = cn.getEdited();
-            String entityId = record.getPrimaryKey().getEntityId();
-            for (String name : record.getProperties()) {
-
-                String shortName = name.substring("Property:".length());
-                //if(schemaFields.containsKey(shortName)){
-                doc.addField(shortName, record.getValue(name));
-                //}
-                System.out.println("name: " + shortName + " val: " + record.getValue(name));
-            }
-        }
-        server.add(doc);
-        server.commit();
-    }
-
-    public void insertDoc(String id, Map<String, String> fields) throws Exception {
-        SolrInputDocument doc = new SolrInputDocument();
-        for (String name : fields.keySet()) {
-            doc.addField(name, fields.get(name));
-        }
-        server.add(doc);
-        server.commit();
-    }
-
-    public void updateDoc(String id, Map<String, String> fields) throws Exception {
-        insertDoc(id, fields);
-    }
-
-    public void removeDoc(String id) throws Exception {
-
-        server.deleteById(id);
-        server.commit();
-    }
+//    public void insertRecord(RecordContainer rc) throws Exception {
+//
+//        //System.out.println("rc: " + Marshalling.toJSON(rc));
+//        SolrInputDocument doc = new SolrInputDocument();
+//        doc.addField(idField, rc.getRecords().get(0).getEdited().getPrimaryKey().getId());
+//        for (ContainerNode cn : rc.getRecords()) {
+//            Record record = cn.getEdited();
+//            String entityId = record.getPrimaryKey().getEntityId();
+//            for (String name : record.getProperties()) {
+//
+//                String shortName = name.substring("Property:".length());
+//                //if(schemaFields.containsKey(shortName)){
+//                doc.addField(shortName, record.getValue(name));
+//                //}
+//                System.out.println("name: " + shortName + " val: " + record.getValue(name));
+//            }
+//        }
+//        server.add(doc);
+//        server.commit();
+//    }
+//
+//    public void insertDoc(String id, Map<String, String> fields) throws Exception {
+//        SolrInputDocument doc = new SolrInputDocument();
+//        for (String name : fields.keySet()) {
+//            doc.addField(name, fields.get(name));
+//        }
+//        server.add(doc);
+//        server.commit();
+//    }
+//
+//    public void updateDoc(String id, Map<String, String> fields) throws Exception {
+//        insertDoc(id, fields);
+//    }
+//
+//    public void removeDoc(String id) throws Exception {
+//
+//        server.deleteById(id);
+//        server.commit();
+//    }
 
     /* Search implements */
     @Override
@@ -180,31 +191,58 @@ public class SolrIndexer implements Search {
     @Override
     public void index(Record record) {
         try {
-            SolrInputDocument doc = new SolrInputDocument();
-            doc.addField(idField, record.getPrimaryKey().getId());
-            for (String name : record.getProperties()) {
-//                System.out.println("name: " + name
-//                        + " val: " + record.getValue(name));
-                processProperty(doc, name, record.getValue(name));
+            for (String p : record.getProperties()) {
+                processProperty(p, record.getValue(p));
             }
-            server.add(doc);
-            server.commit();
+
         } catch (Exception ex) {
             Logger.getLogger(SolrIndexer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    
+    public void processXML(File file) throws Exception{
+        logger.log(Level.INFO, "Sending tp index ...");
+        StreamResult destStream = new StreamResult(new StringWriter());
+        transformer.transform(new StreamSource(file), destStream);
+        StringWriter sw = (StringWriter) destStream.getWriter();
+        SolrIndexerCommiter.postData(this.solrUrl, sw.toString());
+    }
+    
+    public void processXML(Document doc) throws Exception{
+        logger.log(Level.INFO, "Sending tp index ...");
+        StreamResult destStream = new StreamResult(new StringWriter());
+        transformer.transform(new DOMSource(doc), destStream);
+        StringWriter sw = (StringWriter) destStream.getWriter();
+        SolrIndexerCommiter.postData(this.solrUrl, sw.toString());
+    }
+    
+    public void processXML(String xml) throws Exception{
+        logger.log(Level.INFO, "Sending tp index ...");
+        StreamResult destStream = new StreamResult(new StringWriter());
+        transformer.transform(new StreamSource(new StringReader(xml)), destStream);
+        StringWriter sw = (StringWriter) destStream.getWriter();
+        SolrIndexerCommiter.postData(this.solrUrl, sw.toString());
+    }
 
-    @SuppressWarnings("unchecked")
-    private void processProperty(SolrInputDocument doc, String name, Object value) {
+    private void processProperty(String name, Object value) throws Exception {
         if (name.startsWith("Property")) {
             String shortName = name.substring("Property:".length());
-            doc.addField(shortName, value==null?"":value);
+            if ("sourcexml".equalsIgnoreCase(shortName)) {
+                if (value != null) {
+                    StreamResult destStream = new StreamResult(new StringWriter());
+                    transformer.transform(new StreamSource(new StringReader((String) value)), destStream);
+                    StringWriter sw = (StringWriter) destStream.getWriter();
+                    //logger.info(sw.toString());
+                    SolrIndexerCommiter.postData(this.solrUrl, sw.toString());
+                    //commiter.commit(true);
+                }
+            }
         } else if (name.startsWith("Collection")) {
             if (value != null) {
                 ArrayList<Record> r = (ArrayList<Record>) value;
                 for (Record record : r) {
                     for (String p : record.getProperties()) {
-                        processProperty(doc, p, record.getValue(p));
+                        processProperty(p, record.getValue(p));
 
                     }
                 }
@@ -251,10 +289,10 @@ public class SolrIndexer implements Search {
     public void update(PrimaryKey primaryKey) {
         //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-    
+
     @Override
     public void insert(PrimaryKey primaryKey) {
-        Record newRecord =  persister.getCompleteRecord(primaryKey,
+        Record newRecord = persister.getCompleteRecord(primaryKey,
                 DEFAULT_TRAVERSE_LEVEL, DEFAULT_INCLUDE_COLLECTIONS, tx);
         index(newRecord);
     }
@@ -266,7 +304,6 @@ public class SolrIndexer implements Search {
 
     @Override
     public void init(Transaction tx) {
-
         this.tx = tx;
     }
 }

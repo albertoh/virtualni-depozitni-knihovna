@@ -40,10 +40,10 @@ public class Random implements DataSource {
         Structure.zaznam.sourceXML.setValue(zaznam, "<xml>Náhodné xml " + Math.random() + " </xml>");
         rc.addRecord(null, zaznam, zaznam, Operation.CREATE);//přidat záznam do kontejneru
 
-        Record identifikator = newSubrecord(zaznam.getPrimaryKey(), Structure.zaznam.identifikator);//nový záznam pro opakované pole (tabulku) identifikátor
-        Structure.identifikator.hodnota.setValue(identifikator, "Náhodný id " + Math.random());//opět nastavit hodnoty v záznamu opakovaného pole
-        Structure.identifikator.typ.setValue(identifikator, "ISSN");
-        rc.addRecord(null, identifikator, identifikator, Operation.CREATE);//přidat záznam opakovaného pole do kontejneru
+//        Record identifikator = newSubrecord(zaznam.getPrimaryKey(), Structure.zaznam.identifikator);//nový záznam pro opakované pole (tabulku) identifikátor
+//        Structure.identifikator.hodnota.setValue(identifikator, "Náhodný id " + Math.random());//opět nastavit hodnoty v záznamu opakovaného pole
+//        Structure.identifikator.typ.setValue(identifikator, "ISSN");
+//        rc.addRecord(null, identifikator, identifikator, Operation.CREATE);//přidat záznam opakovaného pole do kontejneru
 
         Structure.sklizen.pocet.setValue(sklizen, i);  //aktualizovat hodnotu o počtu sklizených titulů v záznamu sklizně
         rc.addRecord(null, sklizen, sklizen, Operation.UPDATE); //přidat záznam sklizně do kontejneru pro aktualizaci

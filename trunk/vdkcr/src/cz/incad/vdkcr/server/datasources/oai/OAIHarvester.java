@@ -1,7 +1,6 @@
 package cz.incad.vdkcr.server.datasources.oai;
 
 import static org.aplikator.server.data.RecordUtils.newRecord;
-import static org.aplikator.server.data.RecordUtils.newSubrecord;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -37,10 +36,10 @@ import org.w3c.dom.NodeList;
 
 import com.typesafe.config.Config;
 import cz.incad.vdkcr.server.Structure;
+import cz.incad.vdkcr.server.data.SklizenStatus;
 import cz.incad.vdkcr.server.datasources.AbstractPocessDataSource;
-import cz.incad.vdkcr.server.datasources.DataSource;
 import cz.incad.vdkcr.server.datasources.util.XMLReader;
-import cz.incad.vdkcr.server.index.DataSourceIndexer;
+import cz.incad.vdkcr.server.index.solr.SolrIndexer;
 import cz.incad.vdkcr.server.utils.JDBCQueryTemplate;
 import cz.incad.vdkcr.server.utils.MD5;
 import java.io.FileWriter;
@@ -50,10 +49,8 @@ import java.sql.SQLException;
 import java.util.List;
 import javax.xml.transform.stream.StreamSource;
 import org.aplikator.client.shared.data.ListItem;
-import org.aplikator.client.shared.data.PrimaryKey;
-import org.aplikator.server.persistence.Persister;
+import static org.aplikator.server.data.RecordUtils.newSubrecord;
 import org.aplikator.server.persistence.PersisterFactory;
-import org.aplikator.server.persistence.search.Search;
 
 /**
  *
@@ -71,7 +68,8 @@ public class OAIHarvester extends AbstractPocessDataSource {
     String completeListSize;
     int currentDocsSent = 0;
     int currentIndex = 0;
-//    private Search indexer;
+    //private Search indexer;
+    private SolrIndexer indexer;
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd/HH");
     SimpleDateFormat sdfoai;
     Transformer xformer;
@@ -81,7 +79,6 @@ public class OAIHarvester extends AbstractPocessDataSource {
     BufferedWriter logFile;
     BufferedWriter errorLogFile;
 
-    
     @Override
     public int harvest(String params, Record sklizen, Context ctx) throws Exception {
         context = ctx;
@@ -129,6 +126,8 @@ public class OAIHarvester extends AbstractPocessDataSource {
 
             Config config = Configurator.get().getConfig();
 //            indexer = (Search)OAIHarvester.class.getClassLoader().loadClass(config.getString("aplikator.indexerClass")).newInstance();
+            indexer = new SolrIndexer();
+
             //indexer = new FastIndexer();
             harvest();
         } catch (Exception ex) {
@@ -178,6 +177,12 @@ public class OAIHarvester extends AbstractPocessDataSource {
             }
             update(from);
         }
+
+        RecordContainer rc = new RecordContainer();
+        Structure.sklizen.stav.setValue(sklizen, SklizenStatus.Stav.UKONCEN.getValue());
+        Structure.sklizen.ukonceni.setValue(sklizen, new Date());
+        rc.addRecord(null, sklizen, sklizen, Operation.UPDATE);
+        rc = context.getAplikatorService().processRecords(rc);
 
         logFile.newLine();
         logFile.write("Harvest success " + currentDocsSent + " records");
@@ -235,17 +240,17 @@ public class OAIHarvester extends AbstractPocessDataSource {
     }
 
     private void processRecord(Node node, String identifier, int recordNumber, RecordContainer rc) throws Exception {
-        
- 
+
+
         // check interrupted thread
         if (Thread.currentThread().isInterrupted()) {
             throw new InterruptedException();
         }
         if (node != null) {
             String error = xmlReader.getNodeValue(node, "/error/@code");
-            if (error==null || error.equals("")) {
-                
-                
+            if (error == null || error.equals("")) {
+
+
                 String urlZdroje = conf.getProperty("baseUrl")
                         + "?verb=GetRecord&identifier=" + identifier
                         + "&metadataPrefix=" + metadataPrefix
@@ -260,60 +265,27 @@ public class OAIHarvester extends AbstractPocessDataSource {
                     if (!arguments.dontIndex) {
                         //indexer.removeDoc(urlZdroje);
                     }
-                }else{
-                    String xmlStr = "";
-                    
-                    //xmlStr = nodeToString(xmlReader.getNodeElement(), recordNumber);
+                } else {
+                    String xmlStr = nodeToString(xmlReader.getNodeElement(), recordNumber);
                     //System.out.println(xmlStr);
-                    
-                    
+
+
                     String hlavninazev = xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='245']/subfield[@code='a']/text()");
                     String prijmeni = xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='100']/subfield[@code='a']/text()");
-                    if(!"".equals(prijmeni) && prijmeni.indexOf(",")>-1){
+                    if (!"".equals(prijmeni) && prijmeni.indexOf(",") > -1) {
                         prijmeni = prijmeni.substring(0, prijmeni.indexOf(","));
                     }
                     String cnbStr = xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='015']/subfield[@code='a']/text()");
-                    String isbn = xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='020']/subfield[@code='a']/text()");
                     String uniqueCode = cnbStr;
-                    if("".equals(uniqueCode)){
-                        uniqueCode = isbn;
-                    }
-                    if("".equals(uniqueCode)){
+                    if ("".equals(uniqueCode)) {
                         String mistovydani = "./metadata/record/datafield[@tag='260']/subfield[@code='a']/text()";
                         String datumvydani = "./metadata/record/datafield[@tag='260']/subfield[@code='c']/text()";
-                        
-                        uniqueCode = MD5.generate(new String[]{hlavninazev, prijmeni,mistovydani,datumvydani});
+
+                        uniqueCode = MD5.generate(new String[]{hlavninazev, prijmeni, mistovydani, datumvydani});
                     }
-                    String query = "select UniqueDoc_ID, code from uniquedoc where code='"+uniqueCode+"'";
-                    
-                    Record unique;
-                    //Record fr;
-        
-                    List<ListItem> uniqueList = new JDBCQueryTemplate<ListItem>(PersisterFactory.getPersister().getJDBCConnection()) {
-                        @Override
-                        public boolean handleRow(ResultSet rs, List<ListItem> retList) throws SQLException {
-                            Integer id = rs.getInt("UniqueDoc_ID");
-                            String code = rs.getString("code");
-                            retList.add(new ListItem.Default(id, code));
-                            return true;
-                        }
-
-                    }.executeQuery(query);
-                    
-//                    if(uniqueList.isEmpty()){
-//                        unique = newRecord(Structure.uniquedoc);
-//                        Structure.uniquedoc.code.setValue(unique, uniqueCode);
-//                        Structure.uniquedoc.nazev.setValue(unique, hlavninazev);
-//                        rc.addRecord(null, unique, unique, Operation.CREATE);
-//                        fr = newSubrecord(unique.getPrimaryKey(), Structure.uniquedoc.zaznam);
-//                    }else{
-//                        PrimaryKey pk = new PrimaryKey("UniqueDoc", uniqueList.get(0).getValue());
-//                        fr = newSubrecord(pk, Structure.uniquedoc.zaznam);
-//                    }
-
 
                     Record fr = newRecord(Structure.zaznam);
-                    
+
                     Structure.zaznam.sklizen.setValue(fr, sklizen.getPrimaryKey().getId());
                     Structure.zaznam.knihovna.setValue(fr, conf.getProperty("knihovna"));
                     Structure.zaznam.urlZdroje.setValue(fr, urlZdroje);
@@ -328,172 +300,14 @@ public class OAIHarvester extends AbstractPocessDataSource {
 
                     Structure.zaznam.sourceXML.setValue(fr, xmlStr);
                     rc.addRecord(null, fr, fr, Operation.CREATE);
-                    
 
 
-                    //Identifikatory
-                    Record cnb = newSubrecord(fr.getPrimaryKey(), Structure.zaznam.identifikator);
-                    
-                    Structure.identifikator.hodnota.setValue(cnb, cnbStr);
-                    Structure.identifikator.typ.setValue(cnb, "cCNB");
-                    rc.addRecord(null, cnb, cnb, Operation.CREATE);
-                    
-                    String isxn = xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='022']/subfield[@code='a']/text()");
-                    if (!"".equals(isxn)) {
-                        Record ISSN = newSubrecord(fr.getPrimaryKey(), Structure.zaznam.identifikator);
-                        Structure.identifikator.hodnota.setValue(ISSN, isxn);
-                        Structure.identifikator.typ.setValue(ISSN, "ISSN");
-                        rc.addRecord(null, ISSN, ISSN, Operation.CREATE);
-
-                    }
-                    NodeList isbns = xmlReader.getListOfNodes(node, "./metadata/record/datafield[@tag='020']");
-                    for (int i = 0; i < isbns.getLength(); i++) {
-                        Record ISBN = newSubrecord(fr.getPrimaryKey(), Structure.zaznam.identifikator);
-                        
-                        Structure.identifikator.hodnota.setValue(ISBN, isbn);
-                        Structure.identifikator.typ.setValue(ISBN, "ISBN");
-                        rc.addRecord(null, ISBN, ISBN, Operation.CREATE);
-                    }
-//                    isxn = xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='020']/subfield[@code='a']/text()");
-//                    if (!"".equals(isxn)) {
-//                        Record ISBN = newSubrecord(fr.getPrimaryKey(), Structure.zaznam.identifikator);
-//                        Structure.identifikator.hodnota.setValue(ISBN, isxn);
-//                        Structure.identifikator.typ.setValue(ISBN, "ISBN");
-//                        rc.addRecord(null, ISBN, ISBN, Operation.CREATE);
-//                    }
-
-                    //Autori
-                    NodeList autori = xmlReader.getListOfNodes(node, "./metadata/record/datafield[@tag='100']");
-                    String autoriStr = "";
-                    for (int i = 0; i < autori.getLength(); i++) {
-                        Record autor = newSubrecord(fr.getPrimaryKey(), Structure.zaznam.autor);
-                        String autorStr = xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='100'][position()=" + (i + 1) + "]/subfield[@code='a']/text()");
-                        Structure.autor.nazev.setValue(autor,
-                                autorStr);
-                        autoriStr += autorStr + ";";
-                        rc.addRecord(null, autor, autor, Operation.CREATE);
-                    }
-
-                    //Jazyky
-                    String[] jazyky = xmlReader.getListOfValues(node, "./metadata/record/datafield[@tag='041']/subfield[@code='a']/text()");
-                    for (String jazyk : jazyky) {
-                        Record j = newSubrecord(fr.getPrimaryKey(), Structure.zaznam.jazyk);
-                        Structure.jazyk.kod.setValue(j, jazyk);
-                        rc.addRecord(null, j, j, Operation.CREATE);
-                    }
-
-                    //Nazvy
-                    String[] nazvy = xmlReader.getListOfValues(node, "./metadata/record/datafield[@tag='245']/subfield[@code='a']/text()");
-                    for (String nazev : nazvy) {
-                        Record j = newSubrecord(fr.getPrimaryKey(), Structure.zaznam.nazev);
-                        Structure.nazev.nazev.setValue(j, nazev);
-                        Structure.nazev.typNazvu.setValue(j, "Hlavní název");
-                        rc.addRecord(null, j, j, Operation.CREATE);
-                    }
-                    nazvy = xmlReader.getListOfValues(node, "./metadata/record/datafield[@tag='245']/subfield[@code='b']/text()");
-                    for (String nazev : nazvy) {
-                        Record j = newSubrecord(fr.getPrimaryKey(), Structure.zaznam.nazev);
-                        Structure.nazev.nazev.setValue(j, nazev);
-                        Structure.nazev.typNazvu.setValue(j, "Podnázev");
-                        rc.addRecord(null, j, j, Operation.CREATE);
-                    }
-                    nazvy = xmlReader.getListOfValues(node, "./metadata/record/datafield[@tag='245']/subfield[@code='p']/text()");
-                    for (String nazev : nazvy) {
-                        Record j = newSubrecord(fr.getPrimaryKey(), Structure.zaznam.nazev);
-                        Structure.nazev.nazev.setValue(j, nazev);
-                        Structure.nazev.typNazvu.setValue(j, "Název části");
-                        rc.addRecord(null, j, j, Operation.CREATE);
-                    }
-                    nazvy = xmlReader.getListOfValues(node, "./metadata/record/datafield[@tag='246']/subfield[@code='a']/text()");
-                    for (String nazev : nazvy) {
-                        Record j = newSubrecord(fr.getPrimaryKey(), Structure.zaznam.nazev);
-                        Structure.nazev.nazev.setValue(j, nazev);
-                        Structure.nazev.typNazvu.setValue(j, "Alternativní název");
-                        rc.addRecord(null, j, j, Operation.CREATE);
-                    }
-
-                    //Vydani
-                    String vydaniX = "./metadata/record/datafield[@tag='260']";
-                    NodeList vydani = xmlReader.getListOfNodes(node, vydaniX);
-                    for (int i = 0; i < vydani.getLength(); i++) {
-
-                        Record j = newSubrecord(fr.getPrimaryKey(), Structure.zaznam.vydani);
-
-                        Structure.vydani.misto.setValue(j,
-                                xmlReader.getNodeValue(node, vydaniX + "[position()=" + (i + 1) + "]/subfield[@code='a']/text()"));
-                        Structure.vydani.nakladatel.setValue(j,
-                                xmlReader.getNodeValue(node, vydaniX + "[position()=" + (i + 1) + "]/subfield[@code='b']/text()"));
-                        Structure.vydani.datum.setValue(j,
-                                xmlReader.getNodeValue(node, vydaniX + "[position()=" + (i + 1) + "]/subfield[@code='c']/text()"));
-
-                        rc.addRecord(null, j, j, Operation.CREATE);
-                    }
-
-                    //Zpracovani digitalni verze
-                    NodeList dvs = xmlReader.getListOfNodes(node, "./metadata/record/datafield[@tag='856']");
-                    for (int i = 0; i < dvs.getLength(); i++) {
-                        Record dv = newSubrecord(fr.getPrimaryKey(), Structure.zaznam.digitalniVerze);
-                        Structure.digitalniVerze.url.setValue(dv,
-                                xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='856'][position()=" + (i + 1) + "]/subfield[@code='u']/text()"));
-                        rc.addRecord(null, dv, dv, Operation.CREATE);
-                    }
-
-
-                    //Zpracování exemplářů - ITM
-
-                    NodeList exs = xmlReader.getListOfNodes(node, "./metadata/record/datafield[@tag='996']");
-                    //String exsStr = "";
-                    for (int i = 0; i < exs.getLength(); i++) {
-                        Record ex = newSubrecord(fr.getPrimaryKey(), Structure.zaznam.exemplar);
-                        //String exStr = xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='996'][position()=" + (i + 1) + "]/subfield[@code='b']/text()");
-                        Structure.exemplar.carovyKod.setValue(ex,
-                                xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='996'][position()=" + (i + 1) + "]/subfield[@code='b']/text()"));
-                        Structure.exemplar.signatura.setValue(ex,
-                                xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='996'][position()=" + (i + 1) + "]/subfield[@code='c']/text()"));
-                        Structure.exemplar.popis.setValue(ex,
-                                xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='996'][position()=" + (i + 1) + "]/subfield[@code='d']/text()"));
-                        Structure.exemplar.svazek.setValue(ex,
-                                xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='996'][position()=" + (i + 1) + "]/subfield[@code='v']/text()"));
-                        Structure.exemplar.rok.setValue(ex,
-                                xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='996'][position()=" + (i + 1) + "]/subfield[@code='y']/text()"));
-                        Structure.exemplar.cislo.setValue(ex,
-                                xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='996'][position()=" + (i + 1) + "]/subfield[@code='i']/text()"));
-                        Structure.exemplar.dilciKnih.setValue(ex,
-                                xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='996'][position()=" + (i + 1) + "]/subfield[@code='l']/text()"));
-                        Structure.exemplar.sbirka.setValue(ex,
-                                xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='996'][position()=" + (i + 1) + "]/subfield[@code='r']/text()"));
-                        Structure.exemplar.statusJednotky.setValue(ex,
-                                xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='996'][position()=" + (i + 1) + "]/subfield[@code='s']/text()"));
-                        Structure.exemplar.pocetVypujcek.setValue(ex,
-                                xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='996'][position()=" + (i + 1) + "]/subfield[@code='n']/text()"));
-                        Structure.exemplar.poznXerokopii.setValue(ex,
-                                xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='996'][position()=" + (i + 1) + "]/subfield[@code='p']/text()"));
-                        rc.addRecord(null, ex, ex, Operation.CREATE);
-                    }
 
                     Structure.sklizen.pocet.setValue(sklizen, currentDocsSent++);
                     rc.addRecord(null, sklizen, sklizen, Operation.UPDATE);
                     try {
-                        
-                        
                         if (!arguments.dontIndex) {
-//                            Record z = rc.getRecords().get(0).getEdited();
-//                            Map<String, String> fields = new HashMap<String, String>();
-//                            fields.put("title", hlavninazev);
-//                            fields.put("dbid", Integer.toString(z.getPrimaryKey().getId()));
-//                            fields.put("url", urlZdroje);
-//                            fields.put("druhdokumentu", typDokumentu);
-//                            fields.put("autor", autoriStr);
-//                            fields.put("zdroj", conf.getProperty("zdroj"));
-//                            fields.put("isxn", isxn);
-//                            fields.put("ccnb", cnbStr);
-//                            fields.put("base", conf.getProperty("base"));
-//                            fields.put("harvester", conf.getProperty("harvester"));
-//                            fields.put("originformat", conf.getProperty("originformat"));
-//                            fields.put("data", xmlStr);
-//                            fields.put("data", "<record />");
-//                            indexer.insertDoc(urlZdroje, fields);
-                            //indexer.insertRecord(rc);
+                            //indexer.processXML(xmlStr);
                         }
                     } catch (Exception ex) {
                         currentDocsSent--;
@@ -522,7 +336,7 @@ public class OAIHarvester extends AbstractPocessDataSource {
         if (Thread.currentThread().isInterrupted()) {
             throw new InterruptedException();
         }
-        
+
         URL url = new URL(urlString.replace("\n", ""));
 
         logger.log(Level.FINE, "url: {0}", url.toString());
@@ -544,12 +358,12 @@ public class OAIHarvester extends AbstractPocessDataSource {
     }
 
     private String getRecords(String query) throws Exception {
- 
+
         // check interrupted thread
         if (Thread.currentThread().isInterrupted()) {
             throw new InterruptedException();
         }
-        
+
         String urlString = conf.getProperty("baseUrl") + query;
         URL url = new URL(urlString.replace("\n", ""));
         logFile.newLine();
@@ -567,10 +381,10 @@ public class OAIHarvester extends AbstractPocessDataSource {
             completeListSize = xmlReader.getNodeValue("//resumptionToken/@completeListSize");
             String date;
             String identifier;
-            //saveToIndexDir(date, xml, xmlNumber);
 
+            String fileName = null;
             if (arguments.saveToDisk) {
-                writeNodeToFile(xmlReader.getNodeElement(),
+                fileName = writeNodeToFile(xmlReader.getNodeElement(),
                         xmlReader.getNodeValue("//record[position()=1]/header/datestamp/text()"),
                         xmlReader.getNodeValue("//record[position()=1]/header/identifier/text()"));
             }
@@ -578,17 +392,25 @@ public class OAIHarvester extends AbstractPocessDataSource {
             if (arguments.onlyIdentifiers) {
                 //TODO
             } else {
-                RecordContainer rc = new RecordContainer();
-                for (int i = 0; i < nodes.getLength(); i++) {
-                    if (!arguments.onlyHarvest && currentIndex > arguments.startIndex) {
+                if (!arguments.onlyHarvest && currentIndex > arguments.startIndex) {
+                    RecordContainer rc = new RecordContainer();
+                    for (int i = 0; i < nodes.getLength(); i++) {
 //                    date = xmlReader.getNodeValue("//record[position()=" + (i + 1) + "]/header/datestamp/text()");
                         identifier = xmlReader.getNodeValue("//record[position()=" + (i + 1) + "]/header/identifier/text()");
                         processRecord(nodes.item(i), identifier, i + 1, rc);
+                        currentIndex++;
+                        logger.log(Level.FINE, "number: {0} of {1}", new Object[]{(currentDocsSent), completeListSize});
                     }
-                    currentIndex++;
-                    logger.log(Level.FINE, "number: {0} of {1}", new Object[]{(currentDocsSent), completeListSize});
+                    context.getAplikatorService().processRecords(rc);
                 }
-                rc = context.getAplikatorService().processRecords(rc);
+                if (!arguments.dontIndex) {
+                    if (fileName != null) {
+                        indexer.processXML(new File(fileName));
+                    } else {
+                        indexer.processXML(xmlReader.getDoc());
+                    }
+                    indexer.commit();
+                }
             }
             //logger.log(Level.INFO, "number: {0} of {1}", new Object[]{(currentDocsSent), completeListSize});
             return xmlReader.getNodeValue("//resumptionToken/text()");
@@ -621,9 +443,7 @@ public class OAIHarvester extends AbstractPocessDataSource {
                 getRecordsFromDir(children[i]);
             } else {
                 String identifier;
-//                String xmlText = readFileAsString(new FileReader(children[i]));
-//                xmlText = xmlText.replaceAll("<marc:record ", "<marc:record xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ");
-//                xmlReader.loadXml(xmlText);
+                logger.info("Loading file " + children[i].getPath());
                 xmlReader.loadXmlFromFile(children[i]);
                 NodeList nodes = xmlReader.getListOfNodes("//record");
                 RecordContainer rc = new RecordContainer();
@@ -636,14 +456,18 @@ public class OAIHarvester extends AbstractPocessDataSource {
                     currentIndex++;
                     logger.log(Level.FINE, "number: {0}", currentDocsSent);
                 }
-                
+
                 rc = context.getAplikatorService().processRecords(rc);
+                if (!arguments.dontIndex) {
+                    indexer.processXML(children[i]);
+                    indexer.commit();
+                }
 
             }
         }
     }
 
-    private void writeNodeToFile(Node node, String date, String identifier) throws Exception {
+    private String writeNodeToFile(Node node, String date, String identifier) throws Exception {
         String dirName = conf.getProperty("indexDirectory") + File.separatorChar + sdf.format(sdfoai.parse(date));
 
         File dir = new File(dirName);
@@ -659,6 +483,7 @@ public class OAIHarvester extends AbstractPocessDataSource {
         File file = new File(xmlFileName);
         Result result = new StreamResult(file);
         xformer.transform(source, result);
+        return xmlFileName;
     }
 
     private String nodeToString(Node node, int pos) throws Exception {
