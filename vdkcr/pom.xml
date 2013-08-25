@@ -24,7 +24,7 @@
 
     <properties>
         <gwt.version>2.5.1</gwt.version>
-        <errai.version>2.3.1.Final</errai.version>
+        <errai.version>2.4.0.CR1</errai.version>
         <maven.compiler.source>1.6</maven.compiler.source>
         <maven.compiler.target>1.6</maven.compiler.target>
         <maven.compiler.encoding>UTF-8</maven.compiler.encoding>
