@@ -23,6 +23,7 @@ public class ProgramArguments {
     public String metadataPrefix = "";
     public String pathToData = "";
     public int startIndex = -1;
+    public boolean continueOnDocError = false;
 
     public ProgramArguments() {
     }
@@ -47,6 +48,8 @@ public class ProgramArguments {
                 } else if (args[i].equalsIgnoreCase("-pathToData")) {
                     i++;
                     pathToData = args[i];
+                } else if (args[i].equalsIgnoreCase("-continueOnDocError")) {
+                    continueOnDocError = true;
                 } else if (args[i].equalsIgnoreCase("-onlyHarvest")) {
                     onlyHarvest = true;
                     saveToDisk = true;
