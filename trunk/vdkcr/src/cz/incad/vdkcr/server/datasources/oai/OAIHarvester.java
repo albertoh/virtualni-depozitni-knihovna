@@ -240,8 +240,6 @@ public class OAIHarvester extends AbstractPocessDataSource {
     }
 
     private void processRecord(Node node, String identifier, int recordNumber, RecordContainer rc) throws Exception {
-
-
         // check interrupted thread
         if (Thread.currentThread().isInterrupted()) {
             throw new InterruptedException();
@@ -300,8 +298,19 @@ public class OAIHarvester extends AbstractPocessDataSource {
 
                     Structure.zaznam.sourceXML.setValue(fr, xmlStr);
                     rc.addRecord(null, fr, fr, Operation.CREATE);
-
-
+                    
+                    try {
+                        rc = context.getAplikatorService().processRecords(rc);
+                    } catch (Exception ex) {
+                        if (arguments.continueOnDocError) {
+                            logFile.newLine();
+                            logFile.write("Error writing docs to db. Id: " + identifier);
+                            logFile.flush();
+                            logger.log(Level.WARNING, "Error writing doc to db. Id: " + identifier);
+                        } else {
+                            throw new Exception(ex);
+                        }
+                    }
 
                     Structure.sklizen.pocet.setValue(sklizen, currentDocsSent++);
                     rc.addRecord(null, sklizen, sklizen, Operation.UPDATE);
@@ -457,7 +466,7 @@ public class OAIHarvester extends AbstractPocessDataSource {
                     logger.log(Level.FINE, "number: {0}", currentDocsSent);
                 }
 
-                rc = context.getAplikatorService().processRecords(rc);
+                
                 if (!arguments.dontIndex) {
                     indexer.processXML(children[i]);
                     indexer.commit();
