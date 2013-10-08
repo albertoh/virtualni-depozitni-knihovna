@@ -4,22 +4,24 @@
  */
 package cz.incad.vdkcr.server.data;
 
-import java.util.ArrayList;
-import java.util.List;
 import org.aplikator.client.shared.data.ListItem;
 import org.aplikator.server.descriptor.ListProvider;
-import org.jboss.errai.common.client.api.annotations.Portable;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
  * @author alberto
  */
-@Portable
+
 public class SklizenStatus {
     
     static class DefaultListItem implements ListItem{
         private String name;
         private String value;
+
+
 
         public DefaultListItem(String name, String value) {
             this.name = name;
