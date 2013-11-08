@@ -30,6 +30,7 @@ public class VdkcrLoaderServlet extends ApplicationLoaderServlet {
             admin.addView(Structure.zdroj.view());
             admin.addView(Structure.status.view());
             admin.addView(Structure.knihovna.view());
+            admin.addView(Structure.offer.view());
             //Function globalFunction = new Function("GlobalFunction", "GlobalFunction", new ReindexFast());
             //admin.addFunction(globalFunction);
             struct.addMenu(admin);

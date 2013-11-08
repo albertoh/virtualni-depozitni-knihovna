@@ -40,17 +40,10 @@ import cz.incad.vdkcr.server.data.SklizenStatus;
 import cz.incad.vdkcr.server.datasources.AbstractPocessDataSource;
 import cz.incad.vdkcr.server.datasources.util.XMLReader;
 import cz.incad.vdkcr.server.index.solr.SolrIndexer;
-import cz.incad.vdkcr.server.utils.JDBCQueryTemplate;
 import cz.incad.vdkcr.server.utils.MD5;
 import java.io.FileWriter;
 import java.io.StringReader;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.List;
 import javax.xml.transform.stream.StreamSource;
-import org.aplikator.client.shared.data.ListItem;
-import static org.aplikator.server.data.RecordUtils.newSubrecord;
-import org.aplikator.server.persistence.PersisterFactory;
 
 /**
  *
@@ -286,6 +279,7 @@ public class OAIHarvester extends AbstractPocessDataSource {
 
                     Structure.zaznam.sklizen.setValue(fr, sklizen.getPrimaryKey().getId());
                     Structure.zaznam.knihovna.setValue(fr, conf.getProperty("knihovna"));
+                    Structure.zaznam.identifikator.setValue(fr, identifier);
                     Structure.zaznam.urlZdroje.setValue(fr, urlZdroje);
                     Structure.zaznam.hlavniNazev.setValue(fr, hlavninazev);
                     Structure.zaznam.uniqueCode.setValue(fr, uniqueCode);
@@ -306,7 +300,7 @@ public class OAIHarvester extends AbstractPocessDataSource {
                             logFile.newLine();
                             logFile.write("Error writing docs to db. Id: " + identifier);
                             logFile.flush();
-                            logger.log(Level.WARNING, "Error writing doc to db. Id: " + identifier);
+                            logger.log(Level.WARNING, "Error writing doc to db. Id: {0}", identifier);
                         } else {
                             throw new Exception(ex);
                         }
