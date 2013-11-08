@@ -40,6 +40,7 @@ public class Zaznam extends Entity {
         uniqueCode = stringProperty("uniqueCode");
         knihovna = stringProperty("knihovna").setListProvider(Knihovna.getGroupList());
         addIndex("url_zaznam_idx", true, urlZdroje);
+        addIndex("identif_zaznam_idx", true, identifikator);
         addIndex("view_zaznam_idx", false, getPrimaryKey(), hlavniNazev, typDokumentu);
         
 //        this.setIndexed(true);

@@ -190,7 +190,7 @@ public class SolrIndexer implements Search {
     }
     
     public void processXML(File file) throws Exception{
-        logger.log(Level.INFO, "Sending tp index ...");
+        logger.log(Level.INFO, "Sending to index ...");
         StreamResult destStream = new StreamResult(new StringWriter());
         transformer.transform(new StreamSource(file), destStream);
         StringWriter sw = (StringWriter) destStream.getWriter();
@@ -198,7 +198,7 @@ public class SolrIndexer implements Search {
     }
     
     public void processXML(Document doc) throws Exception{
-        logger.log(Level.INFO, "Sending tp index ...");
+        logger.log(Level.INFO, "Sending to index ...");
         StreamResult destStream = new StreamResult(new StringWriter());
         transformer.transform(new DOMSource(doc), destStream);
         StringWriter sw = (StringWriter) destStream.getWriter();
