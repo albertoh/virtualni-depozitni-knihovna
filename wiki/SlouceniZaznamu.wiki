@@ -2,9 +2,9 @@
 
 = Algoritmus generovani kodu pro slouceni zaznamu. =
 
-pokud existuje cCNB generuje MD5 z neho
+Pokud existuje cCNB generuje systém MD5 z jeho hodnoty.
 
-pokud ne generujeme MD5 z normalizovanych poli title, autor, mistovydani, datumvydani
+Není-li pole cCNB vyplněné generuje systém MD5 z normalizovaných poli title, autor, mistovydani, datumvydani 
 
  
 
