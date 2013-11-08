@@ -1,0 +1,15 @@
+#summary Algoritmus generovani kodu pro slouceni zaznamu.
+
+= Algoritmus generovani kodu pro slouceni zaznamu. =
+
+pokud existuje cCNB generuje MD5 z neho
+pokud ne generujeme MD5 z normalizovanych poli title, autor, mistovydani, datumvydani
+
+ 
+
+
+<xsl:variable name="title" select="concat(marc:datafield[@tag=245]/marc:subfield[@code='a'],marc:datafield[@tag=245]/marc:subfield[@code='b'])"/>
+                <xsl:variable name="autor" select="marc:datafield[@tag=700]/marc:subfield[@code='a']"/>
+                <xsl:variable name="mistovydani" select="marc:datafield[@tag=260]/marc:subfield[@code='a']"/>
+                <xsl:variable name="datumvydani" select="marc:datafield[@tag=260]/marc:subfield[@code='c']"/>
+                <xsl:variable name="md5" select="exts:generateNormalizedMD5($xslfunctions, concat($title, $autor, $mistovydani, $datumvydani))"/>
