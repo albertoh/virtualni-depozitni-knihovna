@@ -20,6 +20,7 @@ public class Structure extends Application {
     public static final Knihovna knihovna = new Knihovna();
     public static final Offer offer = new Offer();
     public static final Wanted wanted = new Wanted();
+    public static final Nabidky nabidky = new Nabidky();
 
     static {
         zdroj.sklizen = zdroj.reverseCollectionProperty("sklizen", sklizen, sklizen.zdroj);
