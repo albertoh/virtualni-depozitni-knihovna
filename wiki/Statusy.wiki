@@ -56,4 +56,4 @@
 ||53	||revizní ztráta - UKF           	||274		||Z	||ztráta	||||
 ||58	||vazba - studovny               	||		||N	||nespecifikováno	||||
 ||	||	||	||	||	||	||||
-||	||ostatní případy, bez statusu	||	||	||N 	||nespecifikováno	||||
+||	||ostatní případy, bez statusu	||	||N 	||nespecifikováno	||||
