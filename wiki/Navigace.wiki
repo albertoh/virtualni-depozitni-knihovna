@@ -4,4 +4,6 @@
 
 * [Mapovani Mapovaní polí]
 
+* [Statusy Statusy]
+
 * [Zapisy Zápisy ze schůzek]
