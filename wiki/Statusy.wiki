@@ -43,17 +43,17 @@
 ||42	||výstava                        	||15		||N	||nespecifikováno	||||
 ||43	||zdigitalizováno                	||		||PK	||poškozeno	||zdigitalizováno + 225||
 ||	||					||		||PK	||poškozeno	||zdigitalizováno + 226||
-||	||					||	||	||AR	||archivní exemplář	||zdigitalizováno + 211||
-||	||					||	||	||P	||prezenčně	||v ostatních případech||
-||44	||externí výpůjčka               	||197	||	||N	||nespecifikováno	||||
-||45	||nelze přehrát                  	||32	||	||	||nepublikovat	||||
-||46	||nelze zpřístupnit              	||1855	||	||	||nepublikovat	||||
-||47	||do studovny, pouze prezenčně   	||121	||	||P	||prezenčně	||||
-||48	||vazba - interní                	||6327	||	||N	||nespecifikováno	||||
-||49	||zrušeno                        	||1179	||	||	||nepublikovat	||||
-||51	||uloženo                        	||67548	||	||RZ	||rezervní exemplář	||||
-||52	||ztráta ve studovně             	||	||	||Z	||ztráta	||||
-||53	||revizní ztráta - UKF           	||274	||	||Z	||ztráta	||||
-||58	||vazba - studovny               	||	||	||N	||nespecifikováno	||||
+||	||					||		||AR	||archivní exemplář	||zdigitalizováno + 211||
+||	||					||		||P	||prezenčně	||v ostatních případech||
+||44	||externí výpůjčka               	||197		||N	||nespecifikováno	||||
+||45	||nelze přehrát                  	||32		||	||nepublikovat	||||
+||46	||nelze zpřístupnit              	||1855		||	||nepublikovat	||||
+||47	||do studovny, pouze prezenčně   	||121		||P	||prezenčně	||||
+||48	||vazba - interní                	||6327		||N	||nespecifikováno	||||
+||49	||zrušeno                        	||1179		||	||nepublikovat	||||
+||51	||uloženo                        	||67548		||RZ	||rezervní exemplář	||||
+||52	||ztráta ve studovně             	||		||Z	||ztráta	||||
+||53	||revizní ztráta - UKF           	||274		||Z	||ztráta	||||
+||58	||vazba - studovny               	||		||N	||nespecifikováno	||||
 ||	||	||	||	||	||	||||
 ||	||ostatní případy, bez statusu	||	||	||N 	||nespecifikováno	||||
