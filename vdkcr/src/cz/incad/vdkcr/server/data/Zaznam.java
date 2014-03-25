@@ -21,6 +21,7 @@ public class Zaznam extends Entity {
     public Property<String> uzivatel;
     public Property<String> knihovna;
     public Property<String> uniqueCode;
+    public Property<String> codeType;
 
     
     public Zaznam() {
@@ -38,10 +39,12 @@ public class Zaznam extends Entity {
         sklizen = referenceProperty(Structure.sklizen, "sklizen");
         uzivatel = stringProperty("uzivatel");
         uniqueCode = stringProperty("uniqueCode");
+        codeType = stringProperty("codeType", 10);
         knihovna = stringProperty("knihovna").setListProvider(Knihovna.getGroupList());
         addIndex("url_zaznam_idx", true, urlZdroje);
         addIndex("identif_zaznam_idx", true, identifikator);
         addIndex("view_zaznam_idx", false, getPrimaryKey(), hlavniNazev, typDokumentu);
+        addIndex("unique_code_idx", false, uniqueCode);
         
 //        this.setIndexed(true);
         
@@ -59,7 +62,7 @@ public class Zaznam extends Entity {
     @Override
     protected View initDefaultView() {
         View retval = new View(this);
-        retval.addProperty(hlavniNazev).addProperty(typDokumentu);
+        retval.addProperty(hlavniNazev).addProperty(typDokumentu).addProperty(sourceXML);
         retval.setPageSize(20);
         retval.form(column(
                 knihovna,
@@ -72,7 +75,17 @@ public class Zaznam extends Entity {
         retval.addSortDescriptor("default", "default", SortItem.descending(this.getPrimaryKey()));    // hack kvůli řazení záznamů pozpátku. v případě nespokojenosti zakomentovat tento řádek
         return retval;
     }
+    
+    View xmlView;
 
-
+    public View xmlView(){
+        if(xmlView == null){
+            
+            xmlView = new View(this, "xml");
+            xmlView.addProperty(hlavniNazev).addProperty(sourceXML);
+        }
+        return xmlView;
+        
+    }
 
 }
