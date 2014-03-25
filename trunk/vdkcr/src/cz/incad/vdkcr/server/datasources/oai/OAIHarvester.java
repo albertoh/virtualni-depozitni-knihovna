@@ -33,7 +33,6 @@ import org.aplikator.server.util.Configurator;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-
 import com.typesafe.config.Config;
 import cz.incad.vdkcr.server.Structure;
 import cz.incad.vdkcr.server.data.SklizenStatus;
@@ -43,7 +42,19 @@ import cz.incad.vdkcr.server.index.solr.SolrIndexer;
 import cz.incad.vdkcr.server.utils.MD5;
 import java.io.FileWriter;
 import java.io.StringReader;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.Arrays;
+import java.util.List;
 import javax.xml.transform.stream.StreamSource;
+import org.aplikator.client.shared.descriptor.PropertyDTO;
+import org.aplikator.server.AplikatorServiceServer;
+import org.aplikator.server.persistence.Persister;
+import org.aplikator.server.persistence.PersisterFactory;
+import org.aplikator.server.query.QueryCompareExpression;
+import org.aplikator.server.query.QueryCompareOperator;
+import org.aplikator.server.query.QueryExpression;
 
 /**
  *
@@ -55,13 +66,12 @@ public class OAIHarvester extends AbstractPocessDataSource {
     private ProgramArguments arguments;
     private Configuration conf;
     XMLReader xmlReader;
-    private String responseDate;
+    Connection conn;
     private String metadataPrefix;
     private int interval;
     String completeListSize;
     int currentDocsSent = 0;
     int currentIndex = 0;
-    //private Search indexer;
     private SolrIndexer indexer;
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd/HH");
     SimpleDateFormat sdfoai;
@@ -104,7 +114,10 @@ public class OAIHarvester extends AbstractPocessDataSource {
             throw new Exception(ex);
         }
         xmlReader = new XMLReader();
-        logger.info("Indexer initialized");
+        Persister persister = PersisterFactory.getPersister();
+        conn = persister.getJDBCConnection();
+        
+        psReindex = conn.prepareStatement(sqlReindex);
         sdfoai = new SimpleDateFormat(conf.getProperty("oaiDateFormat"));
         sdf = new SimpleDateFormat(conf.getProperty("filePathFormat"));
         if (arguments.metadataPrefix.equals("")) {
@@ -118,8 +131,10 @@ public class OAIHarvester extends AbstractPocessDataSource {
             xformer = TransformerFactory.newInstance().newTransformer();
 
             Config config = Configurator.get().getConfig();
+
 //            indexer = (Search)OAIHarvester.class.getClassLoader().loadClass(config.getString("aplikator.indexerClass")).newInstance();
             indexer = new SolrIndexer();
+        logger.info("Harvester initialized");
 
             //indexer = new FastIndexer();
             harvest();
@@ -128,6 +143,9 @@ public class OAIHarvester extends AbstractPocessDataSource {
             throw new Exception(ex);
         } finally {
             try {
+//                if (conn != null && !conn.isClosed()) {
+//                    conn.close();
+//                }
                 if (logFile != null) {
                     logFile.flush();
                     logFile.close();
@@ -148,26 +166,25 @@ public class OAIHarvester extends AbstractPocessDataSource {
         long startTime = (new Date()).getTime();
         currentIndex = 0;
 
+        String from = "";
+        File updateTimeFile = new File(this.homeDir + conf.getProperty("updateTimeFile"));
+        if (arguments.from != null) {
+            from = arguments.from;
+        } else if (arguments.fullIndex) {
+            from = getInitialDate();
+        } else {
+            if (updateTimeFile.exists()) {
+                BufferedReader in = new BufferedReader(new FileReader(updateTimeFile));
+                from = in.readLine();
+            } else {
+                from = getInitialDate();
+            }
+        }
         if (!arguments.resumptionToken.equals("")) {
             getRecordWithResumptionToken(arguments.resumptionToken);
         } else if (arguments.fromDisk) {
-            getRecordsFromDisk();
+            getRecordsFromDisk(from);
         } else {
-
-            String from = "";
-            String updateTimeFile = conf.getProperty("updateTimeFile");
-            if (arguments.from != null) {
-                from = arguments.from;
-            } else if (arguments.fullIndex) {
-                from = getInitialDate();
-            } else {
-                if ((new File(updateTimeFile)).exists()) {
-                    BufferedReader in = new BufferedReader(new FileReader(updateTimeFile));
-                    from = in.readLine();
-                } else {
-                    from = getInitialDate();
-                }
-            }
             update(from);
         }
 
@@ -185,10 +202,10 @@ public class OAIHarvester extends AbstractPocessDataSource {
 
     }
 
-    private void writeResponseDate() throws FileNotFoundException, IOException {
-        File dateFile = new File(this.homeDir + conf.getProperty("updateTimeFile"));
-        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(dateFile)));
-        out.write(responseDate);
+    private void writeResponseDate(String from) throws FileNotFoundException, IOException {
+        File updateTimeFile = new File(this.homeDir + conf.getProperty("updateTimeFile"));
+        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(updateTimeFile)));
+        out.write(from);
         out.close();
     }
 
@@ -227,8 +244,8 @@ public class OAIHarvester extends AbstractPocessDataSource {
 
     private void update(String from, String until) throws Exception {
         logger.log(Level.INFO, "Harvesting from: {0} until: {1}", new Object[]{from, until});
-        responseDate = from;
-        writeResponseDate();
+        //responseDate = from;
+        writeResponseDate(from);
         getRecords(from, until);
     }
 
@@ -240,7 +257,6 @@ public class OAIHarvester extends AbstractPocessDataSource {
         if (node != null) {
             String error = xmlReader.getNodeValue(node, "/error/@code");
             if (error == null || error.equals("")) {
-
 
                 String urlZdroje = conf.getProperty("baseUrl")
                         + "?verb=GetRecord&identifier=" + identifier
@@ -260,22 +276,26 @@ public class OAIHarvester extends AbstractPocessDataSource {
                     String xmlStr = nodeToString(xmlReader.getNodeElement(), recordNumber);
                     //System.out.println(xmlStr);
 
-
                     String hlavninazev = xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='245']/subfield[@code='a']/text()");
                     String prijmeni = xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='100']/subfield[@code='a']/text()");
                     if (!"".equals(prijmeni) && prijmeni.indexOf(",") > -1) {
                         prijmeni = prijmeni.substring(0, prijmeni.indexOf(","));
                     }
+                    Record fr = createRecord(identifier);
                     String cnbStr = xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='015']/subfield[@code='a']/text()");
-                    String uniqueCode = cnbStr;
-                    if ("".equals(uniqueCode)) {
+                    String uniqueCode;
+                    String codeType;
+                    if ("".equals(cnbStr)) {
                         String mistovydani = "./metadata/record/datafield[@tag='260']/subfield[@code='a']/text()";
                         String datumvydani = "./metadata/record/datafield[@tag='260']/subfield[@code='c']/text()";
 
                         uniqueCode = MD5.generate(new String[]{hlavninazev, prijmeni, mistovydani, datumvydani});
+                        codeType = "md5";
+                    } else {
+                        uniqueCode = MD5.generate(new String[]{cnbStr});
+                        Structure.zaznam.ccnb.setValue(fr, cnbStr);
+                        codeType = "ccnb";
                     }
-
-                    Record fr = newRecord(Structure.zaznam);
 
                     Structure.zaznam.sklizen.setValue(fr, sklizen.getPrimaryKey().getId());
                     Structure.zaznam.knihovna.setValue(fr, conf.getProperty("knihovna"));
@@ -283,6 +303,7 @@ public class OAIHarvester extends AbstractPocessDataSource {
                     Structure.zaznam.urlZdroje.setValue(fr, urlZdroje);
                     Structure.zaznam.hlavniNazev.setValue(fr, hlavninazev);
                     Structure.zaznam.uniqueCode.setValue(fr, uniqueCode);
+                        Structure.zaznam.codeType.setValue(fr, codeType);
 //                    String typDokumentu = xmlReader.getNodeValue(node, "./metadata/record/controlfield[@tag='990']/text()");
                     String leader = xmlReader.getNodeValue(node, "./metadata/record/leader/text()");
                     if (leader != null && leader.length() > 9) {
@@ -292,7 +313,7 @@ public class OAIHarvester extends AbstractPocessDataSource {
 
                     Structure.zaznam.sourceXML.setValue(fr, xmlStr);
                     rc.addRecord(null, fr, fr, Operation.CREATE);
-                    
+/*
                     try {
                         rc = context.getAplikatorService().processRecords(rc);
                     } catch (Exception ex) {
@@ -305,19 +326,20 @@ public class OAIHarvester extends AbstractPocessDataSource {
                             throw new Exception(ex);
                         }
                     }
-
+*/
                     Structure.sklizen.pocet.setValue(sklizen, currentDocsSent++);
                     rc.addRecord(null, sklizen, sklizen, Operation.UPDATE);
-                    try {
-                        if (!arguments.dontIndex) {
-                            //indexer.processXML(xmlStr);
-                        }
-                    } catch (Exception ex) {
-                        currentDocsSent--;
-                        errorLogFile.newLine();
-                        errorLogFile.write("Cant procces record  " + urlZdroje);
-                        logger.log(Level.WARNING, "Cant procces record  " + urlZdroje, ex);
+                    //try {
+                    if (!arguments.dontIndex) {
+                        reindexRecords(uniqueCode, codeType);
+                        indexer.processXML(xmlStr, uniqueCode, codeType);
                     }
+//                    } catch (Exception ex) {
+//                        currentDocsSent--;
+//                        errorLogFile.newLine();
+//                        errorLogFile.write("Cant procces record  " + urlZdroje);
+//                        logger.log(Level.WARNING, "Cant procces record  " + urlZdroje, ex);
+//                    }
 
                 }
             } else {
@@ -423,27 +445,31 @@ public class OAIHarvester extends AbstractPocessDataSource {
         return null;
     }
 
-    private void getRecordsFromDisk() throws Exception {
-        logger.fine("Processing dowloaded files");
+    private void getRecordsFromDisk(String from) throws Exception {
+        logger.info("Processing dowloaded files");
+        Calendar c_from = Calendar.getInstance();
+        c_from.setTime(sdfoai.parse(from));
+        String dirFrom = sdf.format(c_from);
         if (arguments.pathToData.equals("")) {
-            getRecordsFromDir(new File(conf.getProperty("indexDirectory")));
+            getRecordsFromDir(new File(conf.getProperty("indexDirectory")), dirFrom);
         } else {
-            getRecordsFromDir(new File(arguments.pathToData));
+            getRecordsFromDir(new File(arguments.pathToData), dirFrom);
         }
         if (!arguments.dontIndex) {
 //            indexer.finish();
         }
     }
 
-    private void getRecordsFromDir(File dir) throws Exception {
+    private void getRecordsFromDir(File dir, String from) throws Exception {
         File[] children = dir.listFiles();
+        Arrays.sort(children);
         for (int i = 0; i < children.length; i++) {
             if (currentDocsSent >= arguments.maxDocuments && arguments.maxDocuments > 0) {
                 break;
             }
 
             if (children[i].isDirectory()) {
-                getRecordsFromDir(children[i]);
+                getRecordsFromDir(children[i], from);
             } else {
                 String identifier;
                 logger.info("Loading file " + children[i].getPath());
@@ -460,7 +486,6 @@ public class OAIHarvester extends AbstractPocessDataSource {
                     logger.log(Level.FINE, "number: {0}", currentDocsSent);
                 }
 
-                
                 if (!arguments.dontIndex) {
                     indexer.processXML(children[i]);
                     indexer.commit();
@@ -511,7 +536,7 @@ public class OAIHarvester extends AbstractPocessDataSource {
         Source source = new DOMSource(node);
 
         xformer.transform(source, new StreamResult(sw));
-        System.out.println("sw.toString(): " + sw.toString());
+        //System.out.println("sw.toString(): " + sw.toString());
         return sw.toString();
     }
 
@@ -577,5 +602,37 @@ public class OAIHarvester extends AbstractPocessDataSource {
         //oh.harvest("-cfgFile MZK03-VDK -dontIndex -saveToDisk -onlyHarvest", null, null);
         //oh.harvest("-cfgFile nkp_vdk -dontIndex -saveToDisk -onlyHarvest ", null, null);
         //oh.harvest("-cfgFile nkp_vdk -dontIndex -saveToDisk -onlyHarvest -resumptionToken 201305160612203201305162300009NKC-VDK:NKC-VDKM", null, null);
+    }
+
+    private Record createRecord(String identifier) {
+        QueryExpression queryExpression = new QueryCompareExpression(Structure.zaznam.identifikator,
+                QueryCompareOperator.EQUAL, identifier);
+        List<Record> recs = ((AplikatorServiceServer) context.getAplikatorService()).getRecords(
+                Structure.zaznam.view(), queryExpression, null, null, null, 0, 1, context);
+        if (recs.isEmpty()) {
+            return newRecord(Structure.zaznam);
+        } else {
+            logger.log(Level.FINE, "Identifier {0} already in db", identifier);
+//            logger.log(Level.INFO, "getValue(sourceXML): ", Structure.zaznam.sourceXML.getValue(recs.get(0)));
+//            logger.log(Level.INFO, "getValue(hlavniNazev): ", Structure.zaznam.hlavniNazev.getValue(recs.get(0)));
+//            logger.log(Level.INFO, "getProperties(): ", recs.get(0).getProperties());
+            return recs.get(0);
+        }
+
+    }
+
+    String sqlReindex = "select sourceXML from zaznam where uniqueCode=?";
+    PreparedStatement psReindex;
+
+    private void reindexRecords(String uniqueCode, String codeType) throws Exception {
+        indexer.delete(uniqueCode);
+        psReindex.setString(1, uniqueCode);
+        ResultSet rs = psReindex.executeQuery();
+        while (rs.next()) {
+            //logger.log(Level.INFO, rs.getString("sourceXML"));
+            indexer.processXML(rs.getString("sourceXML"), uniqueCode, codeType);
+            
+        }
+//        throw new Exception("KONEC");
     }
 }

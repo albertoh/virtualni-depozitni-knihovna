@@ -86,6 +86,7 @@ public class SolrIndexer implements Search {
         transformer = tfactory.newTransformer(xslt);
         solrUrl = new URL(this.host + "/update");
 
+        logger.info("Indexer initialized");
     }
 
     public void commit() throws Exception {
@@ -205,9 +206,28 @@ public class SolrIndexer implements Search {
         SolrIndexerCommiter.postData(this.solrUrl, sw.toString());
     }
     
+    
+    
+    public void delete(String id) throws Exception{
+        logger.log(Level.INFO, "deleting from index id: {0}", id);
+        String s = "<delete><id>"+id+"</id></delete>";
+        SolrIndexerCommiter.postData(this.solrUrl, s);
+        logger.log(Level.INFO, "{0} deleted from index", id);
+    }
+    
     public void processXML(String xml) throws Exception{
-        logger.log(Level.INFO, "Sending tp index ...");
+        logger.log(Level.INFO, "Sending to index ...");
         StreamResult destStream = new StreamResult(new StringWriter());
+        transformer.transform(new StreamSource(new StringReader(xml)), destStream);
+        StringWriter sw = (StringWriter) destStream.getWriter();
+        SolrIndexerCommiter.postData(this.solrUrl, sw.toString());
+    }
+    
+    public void processXML(String xml, String uniqueCode, String codeType) throws Exception{
+        logger.log(Level.INFO, "Sending to index ...");
+        StreamResult destStream = new StreamResult(new StringWriter());
+        transformer.setParameter("uniqueCode", uniqueCode);
+        transformer.setParameter("codeType", codeType);
         transformer.transform(new StreamSource(new StringReader(xml)), destStream);
         StringWriter sw = (StringWriter) destStream.getWriter();
         SolrIndexerCommiter.postData(this.solrUrl, sw.toString());

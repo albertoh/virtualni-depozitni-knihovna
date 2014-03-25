@@ -12,6 +12,7 @@ import java.util.zip.Adler32;
 import java.util.zip.CheckedInputStream;
 import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.util.URIUtil;
+import org.w3c.dom.Node;
 
 /**
  *
@@ -19,9 +20,30 @@ import org.apache.commons.httpclient.util.URIUtil;
  */
 public class XSLFunctions {
 
+    
+
+    UTFSort utf_sort;
+
+    public XSLFunctions() throws IOException {
+
+        utf_sort = new UTFSort();
+        utf_sort.init();
+    }
+
+    public String prepareCzechLower(String s) throws Exception {
+        //return removeDiacritic(s).toLowerCase().replace("ch", "hz");
+        return utf_sort.translate(s.toLowerCase());
+    }
+
+    public String prepareCzech(String s) throws Exception {
+        //return removeDiacritic(s).toLowerCase().replace("ch", "hz");
+        return utf_sort.translate(s);
+    }
+
     public String encode(String url) throws URIException {
         return URIUtil.encodeQuery(url);
     }
+
 
     /**
      *
@@ -50,17 +72,24 @@ public class XSLFunctions {
     public String generateNormalizedMD5(String s) {
         return generateMD5(normalize(s));
     }
-    
+
+    public String md5FromNodeSet(org.w3c.dom.NodeList nodes) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < nodes.getLength(); i++) {
+            Node node = nodes.item(i);
+            sb.append(node.getNodeValue());
+        }
+        return generateMD5(normalize(sb.toString()));
+    }
+
     /**
      *
      * @param s
      * @return
      */
     public String strongNormalizedMD5(String s) throws IOException {
-        
-        UTFSort u = new UTFSort();
-        u.init();
-        s = u.translate(s).toLowerCase().replaceAll("[| ]", "");
+
+        s = utf_sort.translate(s).toLowerCase().replaceAll("[| ]", "");
         return generateMD5(s);
     }
 
@@ -131,7 +160,21 @@ public class XSLFunctions {
         }
     }
 
-    public static void main(String[] args) {
+    public int validYear(String year) {
+        try {
+            int y = Integer.parseInt(year);
+            if (y > 999 && y < 2050) {
+                return y;
+            } else {
+                return 0;
+            }
+        } catch (Exception ex) {
+
+            return 0;
+        }
+    }
+
+    public static void main(String[] args) throws IOException {
         String s = "Anglický jazyk :";
         s += "";
         s += "Bratislava :";
