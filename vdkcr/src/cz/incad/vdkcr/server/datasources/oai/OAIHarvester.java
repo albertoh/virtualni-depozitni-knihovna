@@ -1,38 +1,5 @@
 package cz.incad.vdkcr.server.datasources.oai;
 
-import static org.aplikator.server.data.RecordUtils.newRecord;
-
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.StringWriter;
-import java.net.URL;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.xml.transform.Result;
-import javax.xml.transform.Source;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-
-import org.aplikator.client.shared.data.Operation;
-import org.aplikator.client.shared.data.Record;
-import org.aplikator.client.shared.data.RecordContainer;
-import org.aplikator.server.Context;
-import org.aplikator.server.util.Configurator;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import com.typesafe.config.Config;
 import cz.incad.vdkcr.server.Structure;
 import cz.incad.vdkcr.server.data.SklizenStatus;
@@ -40,21 +7,41 @@ import cz.incad.vdkcr.server.datasources.AbstractPocessDataSource;
 import cz.incad.vdkcr.server.datasources.util.XMLReader;
 import cz.incad.vdkcr.server.index.solr.SolrIndexer;
 import cz.incad.vdkcr.server.utils.MD5;
-import java.io.FileWriter;
-import java.io.StringReader;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.util.Arrays;
-import java.util.List;
-import javax.xml.transform.stream.StreamSource;
-import org.aplikator.client.shared.descriptor.PropertyDTO;
+import org.aplikator.client.shared.data.Operation;
+import org.aplikator.client.shared.data.Record;
+import org.aplikator.client.shared.data.RecordContainer;
 import org.aplikator.server.AplikatorServiceServer;
+import org.aplikator.server.Context;
 import org.aplikator.server.persistence.Persister;
 import org.aplikator.server.persistence.PersisterFactory;
 import org.aplikator.server.query.QueryCompareExpression;
 import org.aplikator.server.query.QueryCompareOperator;
 import org.aplikator.server.query.QueryExpression;
+import org.aplikator.server.util.Configurator;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
+import javax.xml.transform.Result;
+import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
+import java.io.*;
+import java.net.URL;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static org.aplikator.server.data.RecordUtils.newRecord;
 
 /**
  *
@@ -605,7 +592,7 @@ public class OAIHarvester extends AbstractPocessDataSource {
     }
 
     private Record createRecord(String identifier) {
-        QueryExpression queryExpression = new QueryCompareExpression(Structure.zaznam.identifikator,
+        QueryExpression queryExpression = new QueryCompareExpression<String>(Structure.zaznam.identifikator,
                 QueryCompareOperator.EQUAL, identifier);
         List<Record> recs = ((AplikatorServiceServer) context.getAplikatorService()).getRecords(
                 Structure.zaznam.view(), queryExpression, null, null, null, 0, 1, context);
