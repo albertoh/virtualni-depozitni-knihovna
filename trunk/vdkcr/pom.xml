@@ -18,7 +18,9 @@
     <version>1.0-SNAPSHOT</version>
     <name>vdkcr</name>
 
-
+    <properties>
+        <gwt.version>2.6.0</gwt.version>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -108,7 +110,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>gwt-maven-plugin</artifactId>
-                <!--version>${gwt.version}</version-->
+                <version>${gwt.version}</version>
                 <configuration>
                     <hostedWebapp>${basedir}/war</hostedWebapp>
                     <webappDirectory>${basedir}/war</webappDirectory>
