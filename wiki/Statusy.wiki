@@ -2,6 +2,20 @@
 
 = Statusy =
 
+==Zkraceni==
+
+||A||absenčně půjčovaný exemplář	||možno doplnit půjčovní exemplář||
+||AR	||archivní exemplář (NKF)	||máme, nedoplňuje se||
+||N	||nespecifikováno	||máme, momentálně není na místě||
+||P	||prezenčně (ostatní konzervační ex.)	||máme, nedoplňuje se||
+||PK	||poškozeno	||máme, ale nutno nahradit||
+||RZ	||rezervní exemplář	||k dispozici pro náhradu nebo doplnění|
+||Z	||ztráta	||nemáme nutno doplnit||
+||ZP	||ve zpracování	||máme nedoplňuje se||
+
+
+==Detailni==
+
 ||	||*Lokání hodnoty*			||*Počet jedn.*	||	||*Společné hodnoty*	||||
 ||01	||badatelský režim               	||1213		||AR	||archivní exemplář	||||
 ||02	||jen do stud. CD Hostivař       	||15784		||AR	||archivní exemplář	||||
