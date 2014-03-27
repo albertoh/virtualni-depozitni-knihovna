@@ -103,7 +103,7 @@ public class OAIHarvester extends AbstractPocessDataSource {
         xmlReader = new XMLReader();
         Persister persister = PersisterFactory.getPersister();
         conn = persister.getJDBCConnection();
-        
+
         psReindex = conn.prepareStatement(sqlReindex);
         sdfoai = new SimpleDateFormat(conf.getProperty("oaiDateFormat"));
         sdf = new SimpleDateFormat(conf.getProperty("filePathFormat"));
@@ -121,7 +121,7 @@ public class OAIHarvester extends AbstractPocessDataSource {
 
 //            indexer = (Search)OAIHarvester.class.getClassLoader().loadClass(config.getString("aplikator.indexerClass")).newInstance();
             indexer = new SolrIndexer();
-        logger.info("Harvester initialized");
+            logger.info("Harvester initialized");
 
             //indexer = new FastIndexer();
             harvest();
@@ -130,9 +130,6 @@ public class OAIHarvester extends AbstractPocessDataSource {
             throw new Exception(ex);
         } finally {
             try {
-//                if (conn != null && !conn.isClosed()) {
-//                    conn.close();
-//                }
                 if (logFile != null) {
                     logFile.flush();
                     logFile.close();
@@ -167,6 +164,7 @@ public class OAIHarvester extends AbstractPocessDataSource {
                 from = getInitialDate();
             }
         }
+        logger.log(Level.INFO, "updating from: " + from);
         if (!arguments.resumptionToken.equals("")) {
             getRecordWithResumptionToken(arguments.resumptionToken);
         } else if (arguments.fromDisk) {
@@ -290,7 +288,7 @@ public class OAIHarvester extends AbstractPocessDataSource {
                     Structure.zaznam.urlZdroje.setValue(fr, urlZdroje);
                     Structure.zaznam.hlavniNazev.setValue(fr, hlavninazev);
                     Structure.zaznam.uniqueCode.setValue(fr, uniqueCode);
-                        Structure.zaznam.codeType.setValue(fr, codeType);
+                    Structure.zaznam.codeType.setValue(fr, codeType);
 //                    String typDokumentu = xmlReader.getNodeValue(node, "./metadata/record/controlfield[@tag='990']/text()");
                     String leader = xmlReader.getNodeValue(node, "./metadata/record/leader/text()");
                     if (leader != null && leader.length() > 9) {
@@ -300,20 +298,20 @@ public class OAIHarvester extends AbstractPocessDataSource {
 
                     Structure.zaznam.sourceXML.setValue(fr, xmlStr);
                     rc.addRecord(null, fr, fr, Operation.CREATE);
-/*
-                    try {
-                        rc = context.getAplikatorService().processRecords(rc);
-                    } catch (Exception ex) {
-                        if (arguments.continueOnDocError) {
-                            logFile.newLine();
-                            logFile.write("Error writing docs to db. Id: " + identifier);
-                            logFile.flush();
-                            logger.log(Level.WARNING, "Error writing doc to db. Id: {0}", identifier);
-                        } else {
-                            throw new Exception(ex);
-                        }
-                    }
-*/
+                    /*
+                     try {
+                     rc = context.getAplikatorService().processRecords(rc);
+                     } catch (Exception ex) {
+                     if (arguments.continueOnDocError) {
+                     logFile.newLine();
+                     logFile.write("Error writing docs to db. Id: " + identifier);
+                     logFile.flush();
+                     logger.log(Level.WARNING, "Error writing doc to db. Id: {0}", identifier);
+                     } else {
+                     throw new Exception(ex);
+                     }
+                     }
+                     */
                     Structure.sklizen.pocet.setValue(sklizen, currentDocsSent++);
                     rc.addRecord(null, sklizen, sklizen, Operation.UPDATE);
                     //try {
@@ -618,7 +616,7 @@ public class OAIHarvester extends AbstractPocessDataSource {
         while (rs.next()) {
             //logger.log(Level.INFO, rs.getString("sourceXML"));
             indexer.processXML(rs.getString("sourceXML"), uniqueCode, codeType);
-            
+
         }
 //        throw new Exception("KONEC");
     }

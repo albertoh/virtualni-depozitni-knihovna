@@ -26,10 +26,8 @@ import org.aplikator.server.descriptor.WizardPage;
 public class SkliditZdroj extends Executable {
 
     Logger log = Logger.getLogger(SkliditZdroj.class.getName());
-
-    @Override
-    public FunctionResult execute(FunctionParameters functionParameters, Context context) {
-        Record zdroj = functionParameters.getClientContext().getCurrentRecord();
+    
+    public FunctionResult run(Record zdroj, Context context, boolean asThread){
         Record sklizen = null;
         try {
 
@@ -55,7 +53,7 @@ public class SkliditZdroj extends Executable {
 
             //int sklizeno = ds.harvest(parametrySklizne, rc.getRecords().get(0).getEdited(), context);
 
-            if (ds instanceof AbstractPocessDataSource) {
+            if (ds instanceof AbstractPocessDataSource && asThread) {
                 ((AbstractPocessDataSource) ds).runHarvestAsProcess(parametrySklizne, rc.getRecords().get(0).getEdited(), context);
                 
                 /*
@@ -91,6 +89,12 @@ public class SkliditZdroj extends Executable {
 
             return new FunctionResult("Sklizeň zdroje " + zdroj.getValue(Structure.zdroj.nazev.getId()) + "selhala: " + t, false);
         }
+    }
+
+    @Override
+    public FunctionResult execute(FunctionParameters functionParameters, Context context) {
+        Record zdroj = functionParameters.getClientContext().getCurrentRecord();
+        return run(zdroj, context, true);
     }
 
     @Override

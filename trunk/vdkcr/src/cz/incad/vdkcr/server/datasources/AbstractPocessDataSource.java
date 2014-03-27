@@ -46,13 +46,13 @@ public abstract class AbstractPocessDataSource implements DataSource {
             try {
                 int harvest = harvest(params, sklizen, ctx);
                 
+            } catch (Exception ex) {
+                
                 RecordContainer rc = new RecordContainer();
                 Structure.sklizen.stav.setValue(sklizen, SklizenStatus.Stav.UKONCEN.getValue());
                 Structure.sklizen.ukonceni.setValue(sklizen, new Date());
                 rc.addRecord(null, sklizen, sklizen, Operation.UPDATE);
                 rc = ctx.getAplikatorService().processRecords(rc);
-                
-            } catch (Exception ex) {
                 Logger.getLogger(AbstractPocessDataSource.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
