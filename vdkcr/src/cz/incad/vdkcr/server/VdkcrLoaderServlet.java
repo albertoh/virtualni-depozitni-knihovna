@@ -8,7 +8,7 @@ import javax.servlet.ServletException;
 import org.aplikator.server.ApplicationLoaderServlet;
 import org.aplikator.server.descriptor.Application;
 import org.aplikator.server.descriptor.Menu;
-
+import org.quartz.SchedulerException;
 
 @SuppressWarnings("serial")
 public class VdkcrLoaderServlet extends ApplicationLoaderServlet {
@@ -16,7 +16,6 @@ public class VdkcrLoaderServlet extends ApplicationLoaderServlet {
     private static final Logger LOG = Logger.getLogger(VdkcrLoaderServlet.class.getName());
 
     Structure struct;
-
 
     @Override
     public void init() throws ServletException {
@@ -34,7 +33,7 @@ public class VdkcrLoaderServlet extends ApplicationLoaderServlet {
             //Function globalFunction = new Function("GlobalFunction", "GlobalFunction", new ReindexFast());
             //admin.addFunction(globalFunction);
             struct.addMenu(admin);
-
+            Structure.zdroj.setCron();
             LOG.info("vdkcr Loader finished");
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, "vdkcr Loader error:", ex);
@@ -42,5 +41,13 @@ public class VdkcrLoaderServlet extends ApplicationLoaderServlet {
         }
     }
 
+    @Override
+    public void destroy() {
+        try {
+            Structure.zdroj.stopCron();
+        } catch (SchedulerException ex) {
+            Logger.getLogger(VdkcrLoaderServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 
 }
