@@ -1,7 +1,6 @@
 package cz.incad.vdkcr.server.functions;
 
 import cz.incad.vdkcr.server.Structure;
-import cz.incad.vdkcr.server.data.Sklizen;
 import cz.incad.vdkcr.server.data.SklizenStatus;
 import cz.incad.vdkcr.server.datasources.AbstractPocessDataSource;
 import cz.incad.vdkcr.server.datasources.DataSource;
@@ -17,8 +16,6 @@ import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static org.aplikator.server.data.RecordUtils.getValue;
-import static org.aplikator.server.data.RecordUtils.newSubrecord;
 import static org.aplikator.server.data.RecordUtils.getValue;
 import static org.aplikator.server.data.RecordUtils.newSubrecord;
 import org.aplikator.server.descriptor.WizardPage;

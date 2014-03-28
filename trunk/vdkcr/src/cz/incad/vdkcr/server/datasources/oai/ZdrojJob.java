@@ -5,9 +5,7 @@
  */
 package cz.incad.vdkcr.server.datasources.oai;
 
-import cz.incad.vdkcr.server.VdkcrLoaderServlet;
 import cz.incad.vdkcr.server.functions.SkliditZdroj;
-import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.aplikator.client.shared.data.Record;
@@ -19,7 +17,6 @@ import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-import org.quartz.JobKey;
 import org.quartz.SchedulerException;
 
 /**
