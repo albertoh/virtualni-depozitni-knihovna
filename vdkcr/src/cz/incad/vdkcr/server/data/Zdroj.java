@@ -13,7 +13,6 @@ import org.aplikator.server.descriptor.Property;
 import org.aplikator.server.descriptor.View;
 
 import cz.incad.vdkcr.server.functions.SkliditZdroj;
-import java.sql.Connection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
