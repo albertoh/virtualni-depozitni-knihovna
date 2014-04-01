@@ -4,6 +4,7 @@ package cz.incad.vdkcr.server.datasources.util;
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
+import cz.incad.xml.VDKNamespaceContext;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -40,22 +41,25 @@ public class XMLReader {
     public String separator = " - ";
     private XPath xpath;
     private Document doc;
+    boolean nsAware = false;
 
     public XMLReader() {
+        nsAware = true;
+
+            XPathFactory factory = XPathFactory.newInstance();
+            xpath = factory.newXPath();
+            xpath.setNamespaceContext(new VDKNamespaceContext());
     }
 
     public void loadXml(String xml) throws ParserConfigurationException, SAXException, IOException {
             DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();
-            domFactory.setNamespaceAware(false); // never forget this!
+            domFactory.setNamespaceAware(nsAware); // never forget this!
             DocumentBuilder builder = domFactory.newDocumentBuilder();
-            //Document doc = builder.parse(url);
 
             InputSource source = new InputSource(new StringReader(xml));
             doc = builder.parse(source);
 
 
-            XPathFactory factory = XPathFactory.newInstance();
-            xpath = factory.newXPath();
     }
     
     public Document getDoc(){
@@ -65,15 +69,12 @@ public class XMLReader {
     public void loadXmlFromFile(File file) {
         try {
             DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();
-            domFactory.setNamespaceAware(false); // never forget this!
+            domFactory.setNamespaceAware(nsAware); // never forget this!
             DocumentBuilder builder = domFactory.newDocumentBuilder();
-            //Document doc = builder.parse(url);
 
             InputSource source = new InputSource(new FileInputStream(file));
             doc = builder.parse(source);
 
-            XPathFactory factory = XPathFactory.newInstance();
-            xpath = factory.newXPath();
         } catch (Exception ex) {
             logger.log(Level.WARNING, "Can't load xml: {0}", ex.getMessage());
         }
@@ -81,14 +82,11 @@ public class XMLReader {
 
     public void readUrl(String urlString) throws ParserConfigurationException, MalformedURLException, IOException, SAXException {
             DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();
-            domFactory.setNamespaceAware(false); // never forget this!
+            domFactory.setNamespaceAware(nsAware); // never forget this!
             DocumentBuilder builder = domFactory.newDocumentBuilder();
             URL url = new URL(urlString);
             InputStream stream = url.openStream();
             doc = builder.parse(stream);
-
-            XPathFactory factory = XPathFactory.newInstance();
-            xpath = factory.newXPath();
     }
 
     public NodeList getListOfNodes(String xPath)

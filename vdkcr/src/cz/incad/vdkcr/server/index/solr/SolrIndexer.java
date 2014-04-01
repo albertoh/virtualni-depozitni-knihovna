@@ -191,7 +191,7 @@ public class SolrIndexer implements Search {
     }
     
     public void processXML(File file) throws Exception{
-        logger.log(Level.INFO, "Sending to index ...");
+        logger.log(Level.INFO, "Sending {0} to index ...", file.getAbsolutePath());
         StreamResult destStream = new StreamResult(new StringWriter());
         transformer.transform(new StreamSource(file), destStream);
         StringWriter sw = (StringWriter) destStream.getWriter();
@@ -208,6 +208,13 @@ public class SolrIndexer implements Search {
     
     
     
+    public void clean() throws Exception{
+        logger.log(Level.INFO, "Cleaning index...");
+        String s = "<delete><query>*:*</query></delete>";
+        SolrIndexerCommiter.postData(this.solrUrl, s);
+        commit();
+        logger.log(Level.INFO, "Index cleaned");
+    }
     public void delete(String id) throws Exception{
         logger.log(Level.INFO, "deleting from index id: {0}", id);
         String s = "<delete><id>"+id+"</id></delete>";
@@ -223,8 +230,8 @@ public class SolrIndexer implements Search {
         SolrIndexerCommiter.postData(this.solrUrl, sw.toString());
     }
     
-    public void processXML(String xml, String uniqueCode, String codeType) throws Exception{
-        logger.log(Level.INFO, "Sending to index ...");
+    public void processXML(String xml, String uniqueCode, String codeType, String identifier) throws Exception{
+        logger.log(Level.INFO, "Sending {0} to index ...", identifier);
         StreamResult destStream = new StreamResult(new StringWriter());
         transformer.setParameter("uniqueCode", uniqueCode);
         transformer.setParameter("codeType", codeType);

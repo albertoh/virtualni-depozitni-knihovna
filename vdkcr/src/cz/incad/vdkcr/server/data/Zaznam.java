@@ -45,6 +45,7 @@ public class Zaznam extends Entity {
         addIndex("identif_zaznam_idx", true, identifikator);
         addIndex("view_zaznam_idx", false, getPrimaryKey(), hlavniNazev, typDokumentu);
         addIndex("unique_code_idx", false, uniqueCode);
+        //addIndex("reindex_zaznam_idx", true, identifikator, uniqueCode, codeType, sourceXML);
         
 //        this.setIndexed(true);
         

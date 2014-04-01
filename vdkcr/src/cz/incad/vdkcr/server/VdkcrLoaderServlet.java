@@ -1,5 +1,6 @@
 package cz.incad.vdkcr.server;
 
+import cz.incad.vdkcr.server.functions.IndexDb;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -7,7 +8,9 @@ import javax.servlet.ServletException;
 
 import org.aplikator.server.ApplicationLoaderServlet;
 import org.aplikator.server.descriptor.Application;
+import org.aplikator.server.descriptor.Function;
 import org.aplikator.server.descriptor.Menu;
+import org.aplikator.server.processes.ProcessManager;
 import org.quartz.SchedulerException;
 
 @SuppressWarnings("serial")
@@ -30,8 +33,8 @@ public class VdkcrLoaderServlet extends ApplicationLoaderServlet {
             admin.addView(Structure.status.view());
             admin.addView(Structure.knihovna.view());
             admin.addView(Structure.offer.view());
-            //Function globalFunction = new Function("GlobalFunction", "GlobalFunction", new ReindexFast());
-            //admin.addFunction(globalFunction);
+            Function globalFunction = new Function("Reindex solr", "Reindex solr", new IndexDb());
+            admin.addFunction(globalFunction);
             struct.addMenu(admin);
             Structure.zdroj.setCron();
             LOG.info("vdkcr Loader finished");
@@ -45,6 +48,7 @@ public class VdkcrLoaderServlet extends ApplicationLoaderServlet {
     public void destroy() {
         try {
             Structure.zdroj.stopCron();
+            ProcessManager.getManager().shutDown();
         } catch (SchedulerException ex) {
             Logger.getLogger(VdkcrLoaderServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
