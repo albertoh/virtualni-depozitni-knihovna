@@ -147,6 +147,7 @@ public class OAIHarvester extends AbstractPocessDataSource {
     }
 
     private void harvest() throws Exception {
+        
         long startTime = (new Date()).getTime();
         currentIndex = 0;
 
@@ -184,7 +185,7 @@ public class OAIHarvester extends AbstractPocessDataSource {
 
         long timeInMiliseconds = (new Date()).getTime() - startTime;
         logger.info(formatElapsedTime(timeInMiliseconds));
-
+        
     }
 
     private void writeResponseDate(String from) throws FileNotFoundException, IOException {
@@ -266,7 +267,12 @@ public class OAIHarvester extends AbstractPocessDataSource {
                     if (!"".equals(prijmeni) && prijmeni.indexOf(",") > -1) {
                         prijmeni = prijmeni.substring(0, prijmeni.indexOf(","));
                     }
-                    Record fr = createRecord(identifier);
+                    boolean zaznamExists = true;
+                    Record fr = getRecord(identifier);
+                    if(fr ==null){
+                        fr = newRecord(Structure.zaznam);
+                        zaznamExists = false;
+                    }
                     String cnbStr = xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='015']/subfield[@code='a']/text()");
                     String uniqueCode;
                     String codeType;
@@ -316,8 +322,8 @@ public class OAIHarvester extends AbstractPocessDataSource {
                     rc.addRecord(null, sklizen, sklizen, Operation.UPDATE);
                     //try {
                     if (!arguments.dontIndex) {
-                        reindexRecords(uniqueCode, codeType);
-                        indexer.processXML(xmlStr, uniqueCode, codeType);
+                        if(zaznamExists) reindexRecords(uniqueCode, codeType, identifier);
+                        indexer.processXML(xmlStr, uniqueCode, codeType, identifier);
                     }
 //                    } catch (Exception ex) {
 //                        currentDocsSent--;
@@ -386,19 +392,19 @@ public class OAIHarvester extends AbstractPocessDataSource {
             logFile.write("retrying url: " + url.toString());
             xmlReader.readUrl(url.toString());
         }
-        String error = xmlReader.getNodeValue("//error/@code");
+        String error = xmlReader.getNodeValue("//oai:error/@code");
         if (error.equals("")) {
-            completeListSize = xmlReader.getNodeValue("//resumptionToken/@completeListSize");
+            completeListSize = xmlReader.getNodeValue("//oai:resumptionToken/@completeListSize");
             String date;
             String identifier;
-
+//oai:ListRecords/oai:record/oai:header
             String fileName = null;
             if (arguments.saveToDisk) {
                 fileName = writeNodeToFile(xmlReader.getNodeElement(),
-                        xmlReader.getNodeValue("//record[position()=1]/header/datestamp/text()"),
-                        xmlReader.getNodeValue("//record[position()=1]/header/identifier/text()"));
+                        xmlReader.getNodeValue("//oai:record[position()=1]/oai:header/oai:datestamp/text()"),
+                        xmlReader.getNodeValue("//oai:record[position()=1]/oai:header/oai:identifier/text()"));
             }
-            NodeList nodes = xmlReader.getListOfNodes("//record");
+            NodeList nodes = xmlReader.getListOfNodes("//oai:record");
             if (arguments.onlyIdentifiers) {
                 //TODO
             } else {
@@ -406,7 +412,7 @@ public class OAIHarvester extends AbstractPocessDataSource {
                     RecordContainer rc = new RecordContainer();
                     for (int i = 0; i < nodes.getLength(); i++) {
 //                    date = xmlReader.getNodeValue("//record[position()=" + (i + 1) + "]/header/datestamp/text()");
-                        identifier = xmlReader.getNodeValue("//record[position()=" + (i + 1) + "]/header/identifier/text()");
+                        identifier = xmlReader.getNodeValue("//oai:record[position()=" + (i + 1) + "]/oai:header/oai:identifier/text()");
                         processRecord(nodes.item(i), identifier, i + 1, rc);
                         currentIndex++;
                         logger.log(Level.FINE, "number: {0} of {1}", new Object[]{(currentDocsSent), completeListSize});
@@ -414,16 +420,16 @@ public class OAIHarvester extends AbstractPocessDataSource {
                     context.getAplikatorService().processRecords(rc);
                 }
                 if (!arguments.dontIndex) {
-                    if (fileName != null) {
-                        indexer.processXML(new File(fileName));
-                    } else {
-                        indexer.processXML(xmlReader.getDoc());
-                    }
+//                    if (fileName != null) {
+//                        indexer.processXML(new File(fileName));
+//                    } else {
+//                        indexer.processXML(xmlReader.getDoc());
+//                    }
                     indexer.commit();
                 }
             }
             //logger.log(Level.INFO, "number: {0} of {1}", new Object[]{(currentDocsSent), completeListSize});
-            return xmlReader.getNodeValue("//resumptionToken/text()");
+            return xmlReader.getNodeValue("//oai:resumptionToken/text()");
         } else {
             logger.log(Level.INFO, "{0} for url {1}", new Object[]{error, urlString});
         }
@@ -464,7 +470,7 @@ public class OAIHarvester extends AbstractPocessDataSource {
                 for (int j = 0; j < nodes.getLength(); j++) {
                     //date = xmlReader.getNodeValue("//record[position()=" + (i + 1) + "]/header/datestamp/text()");
                     if (currentIndex > arguments.startIndex) {
-                        identifier = xmlReader.getNodeValue("//record[position()=" + (j + 1) + "]/header/identifier/text()");
+                        identifier = xmlReader.getNodeValue("//oai:record[position()=" + (j + 1) + "]/oai:header/oai:identifier/text()");
                         processRecord(nodes.item(j), identifier, j + 1, rc);
                     }
                     currentIndex++;
@@ -501,9 +507,9 @@ public class OAIHarvester extends AbstractPocessDataSource {
 
     private String nodeToString(Node node, int pos) throws Exception {
 
-        String xslt = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"  >"
+        String xslt = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><xsl:stylesheet version=\"1.0\" xmlns:oai=\"http://www.openarchives.org/OAI/2.0/\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"  >"
                 + "<xsl:output omit-xml-declaration=\"yes\" method=\"xml\" indent=\"yes\" encoding=\"UTF-8\" />"
-                + "<xsl:template  match=\"/\"><xsl:copy-of select=\"//ListRecords/record[position()=" + pos + "]\" /></xsl:template>"
+                + "<xsl:template  match=\"/\"><xsl:copy-of select=\"//oai:ListRecords/oai:record[position()=" + pos + "]\" /></xsl:template>"
                 + "</xsl:stylesheet>";
         Transformer xformer2 = TransformerFactory.newInstance().newTransformer(new StreamSource(new StringReader(xslt)));
         StringWriter sw = new StringWriter();
@@ -589,13 +595,13 @@ public class OAIHarvester extends AbstractPocessDataSource {
         //oh.harvest("-cfgFile nkp_vdk -dontIndex -saveToDisk -onlyHarvest -resumptionToken 201305160612203201305162300009NKC-VDK:NKC-VDKM", null, null);
     }
 
-    private Record createRecord(String identifier) {
+    private Record getRecord(String identifier) {
         QueryExpression queryExpression = new QueryCompareExpression<String>(Structure.zaznam.identifikator,
                 QueryCompareOperator.EQUAL, identifier);
         List<Record> recs = ((AplikatorServiceServer) context.getAplikatorService()).getRecords(
                 Structure.zaznam.view(), queryExpression, null, null, null, 0, 1, context);
         if (recs.isEmpty()) {
-            return newRecord(Structure.zaznam);
+            return null;
         } else {
             logger.log(Level.FINE, "Identifier {0} already in db", identifier);
 //            logger.log(Level.INFO, "getValue(sourceXML): ", Structure.zaznam.sourceXML.getValue(recs.get(0)));
@@ -609,13 +615,13 @@ public class OAIHarvester extends AbstractPocessDataSource {
     String sqlReindex = "select sourceXML from zaznam where uniqueCode=?";
     PreparedStatement psReindex;
 
-    private void reindexRecords(String uniqueCode, String codeType) throws Exception {
+    private void reindexRecords(String uniqueCode, String codeType, String identifier) throws Exception {
         indexer.delete(uniqueCode);
         psReindex.setString(1, uniqueCode);
         ResultSet rs = psReindex.executeQuery();
         while (rs.next()) {
             //logger.log(Level.INFO, rs.getString("sourceXML"));
-            indexer.processXML(rs.getString("sourceXML"), uniqueCode, codeType);
+            indexer.processXML(rs.getString("sourceXML"), uniqueCode, codeType, identifier);
 
         }
 //        throw new Exception("KONEC");

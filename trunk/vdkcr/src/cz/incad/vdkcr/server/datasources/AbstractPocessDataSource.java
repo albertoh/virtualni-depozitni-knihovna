@@ -14,6 +14,7 @@ import org.aplikator.client.shared.data.Operation;
 import org.aplikator.client.shared.data.Record;
 import org.aplikator.client.shared.data.RecordContainer;
 import org.aplikator.server.Context;
+import org.aplikator.server.processes.CannotCallStartException;
 import org.aplikator.server.processes.Process;
 import org.aplikator.server.processes.ProcessFactory;
 import org.aplikator.server.processes.ProcessType;
@@ -29,6 +30,7 @@ public abstract class AbstractPocessDataSource implements DataSource {
     public AbstractPocessDataSource() {
     }
 
+    
     public class _MRun implements RunnableSerializationAware {
 
         private final String params;
@@ -59,11 +61,13 @@ public abstract class AbstractPocessDataSource implements DataSource {
     }
 
     public void runHarvestAsProcess(String params, Record sklizen, Context ctx) {
-        Process process2 = ProcessFactory.get(ProcessType.THREAD).create(new _MRun(params,sklizen,ctx));
+            
+            
+            Process process2 = ProcessFactory.get(ProcessType.THREAD).create(new _MRun(params,sklizen,ctx));
             try {
-                process2.startMe();
+            process2.startMe();
             } catch (Exception ex) {
-                Logger.getLogger(AbstractPocessDataSource.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AbstractPocessDataSource.class.getName()).log(Level.SEVERE, null, ex);
             }
     }
 }
