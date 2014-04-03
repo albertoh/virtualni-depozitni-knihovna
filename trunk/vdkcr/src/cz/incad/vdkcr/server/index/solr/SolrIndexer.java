@@ -84,7 +84,7 @@ public class SolrIndexer implements Search {
         TransformerFactory tfactory = TransformerFactory.newInstance();
         StreamSource xslt = new StreamSource(new File(this.xsl));
         transformer = tfactory.newTransformer(xslt);
-        solrUrl = new URL(this.host + "/update");
+        solrUrl = new URL(this.host + "/" + collection + "/update");
 
         logger.info("Indexer initialized");
     }
