@@ -233,15 +233,22 @@ public class OAIHarvester extends AbstractPocessDataSource {
         //responseDate = from;
         writeResponseDate(from);
         getRecords(from, until);
+        writeResponseDate(until);
     }
 
     private void processRecord(Node node, String identifier, int recordNumber, RecordContainer rc) throws Exception {
         // check interrupted thread
         if (Thread.currentThread().isInterrupted()) {
+            Structure.sklizen.stav.setValue(sklizen, SklizenStatus.Stav.UKONCEN.getValue());
+            Structure.sklizen.ukonceni.setValue(sklizen, new Date());
+            Structure.sklizen.pocet.setValue(sklizen, currentDocsSent++);
+            rc.addRecord(null, sklizen, sklizen, Operation.UPDATE);
+            rc = context.getAplikatorService().processRecords(rc);
+            logger.log(Level.INFO, "HARVERTER INTERRUPTED");
             throw new InterruptedException();
         }
         if (node != null) {
-            String error = xmlReader.getNodeValue(node, "/error/@code");
+            String error = xmlReader.getNodeValue(node, "/oai:error/@code");
             if (error == null || error.equals("")) {
 
                 String urlZdroje = conf.getProperty("baseUrl")
@@ -249,7 +256,7 @@ public class OAIHarvester extends AbstractPocessDataSource {
                         + "&metadataPrefix=" + metadataPrefix
                         + "#set=" + conf.getProperty("set");
 
-                if ("deleted".equals(xmlReader.getNodeValue(node, "./header/@status"))) {
+                if ("deleted".equals(xmlReader.getNodeValue(node, "./oai:header/@status"))) {
                     if (arguments.fullIndex) {
                         logger.log(Level.FINE, "Skip deleted record when fullindex");
                         return;
@@ -262,25 +269,26 @@ public class OAIHarvester extends AbstractPocessDataSource {
                     String xmlStr = nodeToString(xmlReader.getNodeElement(), recordNumber);
                     //System.out.println(xmlStr);
 
-                    String hlavninazev = xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='245']/subfield[@code='a']/text()");
-                    String prijmeni = xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='100']/subfield[@code='a']/text()");
-                    if (!"".equals(prijmeni) && prijmeni.indexOf(",") > -1) {
-                        prijmeni = prijmeni.substring(0, prijmeni.indexOf(","));
-                    }
+                    String hlavninazev = xmlReader.getNodeValue(node, "./oai:metadata/marc:record/marc:datafield[@tag='245']/marc:subfield[@code='a']/text()");
+                    
                     boolean zaznamExists = true;
                     Record fr = getRecord(identifier);
                     if(fr ==null){
                         fr = newRecord(Structure.zaznam);
                         zaznamExists = false;
                     }
-                    String cnbStr = xmlReader.getNodeValue(node, "./metadata/record/datafield[@tag='015']/subfield[@code='a']/text()");
+                    String cnbStr = xmlReader.getNodeValue(node, "./oai:metadata/marc:record/marc:datafield[@tag='015']/marc:subfield[@code='a']/text()");
                     String uniqueCode;
                     String codeType;
                     if ("".equals(cnbStr)) {
-                        String mistovydani = "./metadata/record/datafield[@tag='260']/subfield[@code='a']/text()";
-                        String datumvydani = "./metadata/record/datafield[@tag='260']/subfield[@code='c']/text()";
 
-                        uniqueCode = MD5.generate(new String[]{hlavninazev, prijmeni, mistovydani, datumvydani});
+                        uniqueCode = MD5.generate(new String[]{
+                            hlavninazev, 
+                            xmlReader.getNodeValue(node, "./oai:metadata/marc:record/marc:datafield[@tag='245']/marc:subfield[@code='b']/text()"),
+                            xmlReader.getNodeValue(node, "./oai:metadata/marc:record/marc:datafield[@tag='700']/marc:subfield[@code='a']/text()"),
+                            xmlReader.getNodeValue(node, "./oai:metadata/marc:record/marc:datafield[@tag='260']/marc:subfield[@code='a']/text()"), 
+                            xmlReader.getNodeValue(node, "./oai:metadata/marc:record/marc:datafield[@tag='260']/marc:subfield[@code='c']/text()")
+                        });
                         codeType = "md5";
                     } else {
                         uniqueCode = MD5.generate(new String[]{cnbStr});
@@ -295,8 +303,8 @@ public class OAIHarvester extends AbstractPocessDataSource {
                     Structure.zaznam.hlavniNazev.setValue(fr, hlavninazev);
                     Structure.zaznam.uniqueCode.setValue(fr, uniqueCode);
                     Structure.zaznam.codeType.setValue(fr, codeType);
-//                    String typDokumentu = xmlReader.getNodeValue(node, "./metadata/record/controlfield[@tag='990']/text()");
-                    String leader = xmlReader.getNodeValue(node, "./metadata/record/leader/text()");
+//                    String typDokumentu = xmlReader.getNodeValue(node, "./oai:metadata/record/controlfield[@tag='990']/text()");
+                    String leader = xmlReader.getNodeValue(node, "./oai:metadata/record/leader/text()");
                     if (leader != null && leader.length() > 9) {
                         String typDokumentu = typDokumentu(leader);
                         Structure.zaznam.typDokumentu.setValue(fr, typDokumentu);
@@ -440,7 +448,9 @@ public class OAIHarvester extends AbstractPocessDataSource {
         logger.info("Processing dowloaded files");
         Calendar c_from = Calendar.getInstance();
         c_from.setTime(sdfoai.parse(from));
-        String dirFrom = sdf.format(c_from);
+        
+        
+        String dirFrom = sdf.format(c_from.getTime());
         if (arguments.pathToData.equals("")) {
             getRecordsFromDir(new File(conf.getProperty("indexDirectory")), dirFrom);
         } else {

@@ -90,16 +90,19 @@ public class Zdroj extends Entity {
                 .withIdentity("job_" + name, "Zdroj")
                 .setJobData(data)
                 .build();
-
-        CronTrigger trigger = newTrigger()
-                .withIdentity("trigger_" + name, "Zdroj")
-                .withSchedule(cronSchedule(cronVal))
-                .build();
         if (sched.checkExists(job.getKey())) {
             sched.deleteJob(job.getKey());
         }
-        sched.scheduleJob(job, trigger);
-        LOGGER.log(Level.INFO, "Cron for " + name + " scheduled with " + cronVal);
+        if(cronVal.equals("")){
+            LOGGER.log(Level.INFO, "Cron for " + name + " cleared ");
+        }else{
+            CronTrigger trigger = newTrigger()
+                    .withIdentity("trigger_" + name, "Zdroj")
+                    .withSchedule(cronSchedule(cronVal))
+                    .build();
+            sched.scheduleJob(job, trigger);
+            LOGGER.log(Level.INFO, "Cron for " + name + " scheduled with " + cronVal);
+        }
     }
 
     public void stopCron() throws SchedulerException {
