@@ -225,6 +225,7 @@ public class OAIHarvester extends AbstractPocessDataSource {
         if (!arguments.dontIndex) {
 //            indexer.finish();
         }
+        writeResponseDate(to);
 
     }
 
@@ -303,8 +304,7 @@ public class OAIHarvester extends AbstractPocessDataSource {
                     Structure.zaznam.hlavniNazev.setValue(fr, hlavninazev);
                     Structure.zaznam.uniqueCode.setValue(fr, uniqueCode);
                     Structure.zaznam.codeType.setValue(fr, codeType);
-//                    String typDokumentu = xmlReader.getNodeValue(node, "./oai:metadata/record/controlfield[@tag='990']/text()");
-                    String leader = xmlReader.getNodeValue(node, "./oai:metadata/record/leader/text()");
+                    String leader = xmlReader.getNodeValue(node, "./oai:metadata/marc:record/marc:leader/text()");
                     if (leader != null && leader.length() > 9) {
                         String typDokumentu = typDokumentu(leader);
                         Structure.zaznam.typDokumentu.setValue(fr, typDokumentu);
@@ -330,8 +330,12 @@ public class OAIHarvester extends AbstractPocessDataSource {
                     rc.addRecord(null, sklizen, sklizen, Operation.UPDATE);
                     //try {
                     if (!arguments.dontIndex) {
-                        if(zaznamExists) reindexRecords(uniqueCode, codeType, identifier);
-                        indexer.processXML(xmlStr, uniqueCode, codeType, identifier);
+                        if(zaznamExists) {
+                            reindexRecords(uniqueCode, codeType, identifier);
+                        }else{
+                            indexer.processXML(xmlStr, uniqueCode, codeType, identifier);
+                        }
+                        
                     }
 //                    } catch (Exception ex) {
 //                        currentDocsSent--;
@@ -358,6 +362,7 @@ public class OAIHarvester extends AbstractPocessDataSource {
 
         // check interrupted thread
         if (Thread.currentThread().isInterrupted()) {
+            logger.log(Level.INFO, "HARVERTER INTERRUPTED");
             throw new InterruptedException();
         }
 
@@ -385,6 +390,7 @@ public class OAIHarvester extends AbstractPocessDataSource {
 
         // check interrupted thread
         if (Thread.currentThread().isInterrupted()) {
+            logger.log(Level.INFO, "HARVERTER INTERRUPTED");
             throw new InterruptedException();
         }
 
@@ -419,7 +425,6 @@ public class OAIHarvester extends AbstractPocessDataSource {
                 if (!arguments.onlyHarvest && currentIndex > arguments.startIndex) {
                     RecordContainer rc = new RecordContainer();
                     for (int i = 0; i < nodes.getLength(); i++) {
-//                    date = xmlReader.getNodeValue("//record[position()=" + (i + 1) + "]/header/datestamp/text()");
                         identifier = xmlReader.getNodeValue("//oai:record[position()=" + (i + 1) + "]/oai:header/oai:identifier/text()");
                         processRecord(nodes.item(i), identifier, i + 1, rc);
                         currentIndex++;
@@ -475,10 +480,9 @@ public class OAIHarvester extends AbstractPocessDataSource {
                 String identifier;
                 logger.info("Loading file " + children[i].getPath());
                 xmlReader.loadXmlFromFile(children[i]);
-                NodeList nodes = xmlReader.getListOfNodes("//record");
+                NodeList nodes = xmlReader.getListOfNodes("//oai:record");
                 RecordContainer rc = new RecordContainer();
                 for (int j = 0; j < nodes.getLength(); j++) {
-                    //date = xmlReader.getNodeValue("//record[position()=" + (i + 1) + "]/header/datestamp/text()");
                     if (currentIndex > arguments.startIndex) {
                         identifier = xmlReader.getNodeValue("//oai:record[position()=" + (j + 1) + "]/oai:header/oai:identifier/text()");
                         processRecord(nodes.item(j), identifier, j + 1, rc);
@@ -487,10 +491,10 @@ public class OAIHarvester extends AbstractPocessDataSource {
                     logger.log(Level.FINE, "number: {0}", currentDocsSent);
                 }
 
-                if (!arguments.dontIndex) {
-                    indexer.processXML(children[i]);
-                    indexer.commit();
-                }
+//                if (!arguments.dontIndex) {
+//                    indexer.processXML(children[i]);
+//                    indexer.commit();
+//                }
 
             }
         }

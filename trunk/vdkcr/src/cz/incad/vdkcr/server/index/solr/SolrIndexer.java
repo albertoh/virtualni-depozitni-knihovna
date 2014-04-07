@@ -219,6 +219,7 @@ public class SolrIndexer implements Search {
         logger.log(Level.INFO, "deleting from index id: {0}", id);
         String s = "<delete><id>"+id+"</id></delete>";
         SolrIndexerCommiter.postData(this.solrUrl, s);
+        commit();
         logger.log(Level.INFO, "{0} deleted from index", id);
     }
     
