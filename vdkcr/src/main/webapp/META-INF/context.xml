@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Context antiJARLocking="true" path="/vdkcr">
+  <Resource auth="Container" driverClassName="oracle.jdbc.OracleDriver" 
+            maxActive="100" maxIdle="30" maxWait="10000" 
+            name="jdbc/aplikatorDS" password="vdk" 
+            type="javax.sql.DataSource" 
+            url="jdbc:oracle:thin:@//oratest.incad.cz:1521/orcl" 
+            username="DEV_VDK"/>
+</Context>

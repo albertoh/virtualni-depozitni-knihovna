@@ -28,6 +28,14 @@
             <artifactId>aplikator</artifactId>
             <version>0.3-SNAPSHOT</version>
         </dependency>
+		
+	    <dependency>
+	      <groupId>com.google.gwt</groupId>
+	      <artifactId>gwt-user</artifactId>
+		  <version>${gwt.version}</version>
+	      <scope>provided</scope>
+	    </dependency>
+		
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
@@ -84,38 +92,32 @@
             <artifactId>solr-solrj</artifactId>
             <version>4.3.1</version>
         </dependency>
+		<dependency>
+			<groupId>org.quartz-scheduler</groupId>
+			<artifactId>quartz</artifactId>
+			<version>2.1.1</version>
+		</dependency>
+            
     </dependencies>
 
-    <repositories>
+    <!--repositories>
         <repository>
             <id>typesafe</id>
             <name>Typesafe Repository</name>
             <url>http://repo.typesafe.com/typesafe/releases/</url>
         </repository>
-    </repositories>
+    </repositories-->
 
 
     <build>
-        <outputDirectory>war/WEB-INF/classes</outputDirectory>
-        <sourceDirectory>src</sourceDirectory>
-        <resources>
-            <resource>
-                <directory>${basedir}/src</directory>
-                <includes>
-                    <include>**/*</include>
-                </includes>
-            </resource>
-        </resources>
         <plugins>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>gwt-maven-plugin</artifactId>
                 <version>${gwt.version}</version>
                 <configuration>
-                    <hostedWebapp>${basedir}/war</hostedWebapp>
-                    <webappDirectory>${basedir}/war</webappDirectory>
+                    <hostedWebapp>src/main/webapp</hostedWebapp>
                     <runTarget>Vdkcr.html</runTarget>
-
                 </configuration>
 
                 <executions>
@@ -132,7 +134,6 @@
                 <artifactId>maven-war-plugin</artifactId>
                 <version>2.2</version>
                 <configuration>
-                    <warSourceDirectory>war</warSourceDirectory>
                 </configuration>
             </plugin>
 
@@ -155,10 +156,11 @@
                 <configuration>
                     <filesets>
                         <fileset>
-                            <directory>${basedir}/war/WEB-INF/classes</directory>
-                        </fileset>
-                        <fileset>
-                            <directory>${basedir}/war/WEB-INF/lib</directory>
+                            <directory>${basedir}</directory>
+                            <includes>
+				                <include>**/gwt-unitCache/**</include>
+				                <include>.errai/</include>
+                            </includes>
                         </fileset>
                     </filesets>
                 </configuration>
