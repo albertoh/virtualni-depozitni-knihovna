@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<setup>
+    <properties>
+        <property name="indexDirectory" value="/home/vdk/.vdk/OAI/MZK/mzk01" />
+        <property name="updateTimeFile" value="mzk01.time" />
+        <property name="charset" value="UTF-8" />
+        <property name="dateFormat" value="yyyy-MM-dd" />
+        <property name="oaiDateFormat" value="yyyy-MM-dd'T'HH:mm:ss'Z'" />
+        <property name="filePathFormat" value="yyyy/MM/dd/HH" />
+        <property name="separator" value=";" />
+        <property name="xmlField" value="" />
+        
+        <property name="baseUrl" value="http://aleph.mzk.cz/OAI" />
+        <property name="set" value="MZK01" />
+        <property name="metadataPrefix" value="marc21" />
+        <property name="verb" value="ListRecords" />
+        <property name="identifierPrefix" value="oai:aleph.mzk.cz:" />
+        <property name="interval" value="day" comment="year|month|day|hour|minute|second" />
+        
+        <property name="zdroj" value="Moravská zemská knihovna v Brně" />
+        <property name="base" value="MZK01" />
+        <property name="harvester" value="OAI" />
+        <property name="originformat" value="marc21" />
+        
+        
+    </properties>
+</setup>
