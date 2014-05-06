@@ -1,6 +1,7 @@
 package cz.incad.vdkcr.server;
 
 import cz.incad.vdkcr.server.functions.IndexDb;
+import cz.incad.vdkcr.server.functions.RegenerateMD5;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -35,6 +36,8 @@ public class VdkcrLoaderServlet extends ApplicationLoaderServlet {
             admin.addView(Structure.offer.view());
             Function globalFunction = new Function("Reindex solr", "Reindex solr", new IndexDb());
             admin.addFunction(globalFunction);
+            Function md5Function = new Function("Regenerate MD5", "Regenerate MD5", new RegenerateMD5());
+            admin.addFunction(md5Function);
             struct.addMenu(admin);
             Structure.zdroj.setCron();
             LOG.info("vdkcr Loader finished");
