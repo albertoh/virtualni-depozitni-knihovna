@@ -10,8 +10,8 @@ import org.aplikator.server.descriptor.View;
 
 public class Nabidky extends Entity {
     public Property<String> zaznam;
-    public Property<String> exemplar;
     public Reference<Knihovna> knihovna;
+    public Reference<Offer> offer;
 
     public Nabidky() {
         super("Nabidky","Nabidky", "Nabidky_ID");
@@ -20,9 +20,9 @@ public class Nabidky extends Entity {
 
     private void initFields() {
         zaznam = stringProperty("zaznam");
-        exemplar = stringProperty("exemplar");
         knihovna = referenceProperty(Structure.knihovna, "knihovna");
-        addIndex("id_kn_nabidky_idx", true, zaznam, exemplar, knihovna);
+        offer = referenceProperty(Structure.offer, "offer");
+        addIndex("id_kn_nabidky_idx", true, zaznam, knihovna, offer);
 
     }
 
@@ -32,8 +32,8 @@ public class Nabidky extends Entity {
         retval.addProperty(zaznam).addProperty(knihovna);
         retval.form(column(
                 zaznam,
-                exemplar,
-                knihovna
+                knihovna,
+                offer
             ));
         return retval;
     }

@@ -231,6 +231,11 @@ public class SolrIndexer implements Search {
         SolrIndexerCommiter.postData(this.solrUrl, sw.toString());
     }
     
+    public void sendXML(String xml) throws Exception{
+        logger.log(Level.INFO, "Sending to index ...");
+        SolrIndexerCommiter.postData(this.solrUrl, xml);
+    }
+    
     public void processXML(String xml, String uniqueCode, String codeType, String identifier) throws Exception{
         logger.log(Level.INFO, "Sending {0} to index ...", identifier);
         StreamResult destStream = new StreamResult(new StringWriter());

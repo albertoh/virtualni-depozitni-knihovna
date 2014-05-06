@@ -138,7 +138,7 @@ public class OAIHarvester extends AbstractPocessDataSource {
                     errorLogFile.flush();
                     errorLogFile.close();
                 }
-            } catch (Exception ex) {
+            } catch (IOException ex) {
                 logger.log(Level.WARNING, null, ex);
             }
         }
@@ -147,11 +147,11 @@ public class OAIHarvester extends AbstractPocessDataSource {
     }
 
     private void harvest() throws Exception {
-        
+
         long startTime = (new Date()).getTime();
         currentIndex = 0;
 
-        String from = "";
+        String from;
         File updateTimeFile = new File(this.homeDir + conf.getProperty("updateTimeFile"));
         if (arguments.from != null) {
             from = arguments.from;
@@ -178,14 +178,14 @@ public class OAIHarvester extends AbstractPocessDataSource {
         Structure.sklizen.stav.setValue(sklizen, SklizenStatus.Stav.UKONCEN.getValue());
         Structure.sklizen.ukonceni.setValue(sklizen, new Date());
         rc.addRecord(null, sklizen, sklizen, Operation.UPDATE);
-        rc = context.getAplikatorService().processRecords(rc);
+        context.getAplikatorService().processRecords(rc);
 
         logFile.newLine();
         logFile.write("Harvest success " + currentDocsSent + " records");
 
         long timeInMiliseconds = (new Date()).getTime() - startTime;
         logger.info(formatElapsedTime(timeInMiliseconds));
-        
+
     }
 
     private void writeResponseDate(String from) throws FileNotFoundException, IOException {
@@ -203,7 +203,7 @@ public class OAIHarvester extends AbstractPocessDataSource {
 
         c_to.add(interval, 1);
 
-        String to = "";
+        String to;
         Date date = new Date();
         //sdfoai.setTimeZone(TimeZone.getTimeZone("GMT"));
 
@@ -244,7 +244,7 @@ public class OAIHarvester extends AbstractPocessDataSource {
             Structure.sklizen.ukonceni.setValue(sklizen, new Date());
             Structure.sklizen.pocet.setValue(sklizen, currentDocsSent++);
             rc.addRecord(null, sklizen, sklizen, Operation.UPDATE);
-            rc = context.getAplikatorService().processRecords(rc);
+            context.getAplikatorService().processRecords(rc);
             logger.log(Level.INFO, "HARVERTER INTERRUPTED");
             throw new InterruptedException();
         }
@@ -271,10 +271,10 @@ public class OAIHarvester extends AbstractPocessDataSource {
                     //System.out.println(xmlStr);
 
                     String hlavninazev = xmlReader.getNodeValue(node, "./oai:metadata/marc:record/marc:datafield[@tag='245']/marc:subfield[@code='a']/text()");
-                    
+
                     boolean zaznamExists = true;
                     Record fr = getRecord(identifier);
-                    if(fr ==null){
+                    if (fr == null) {
                         fr = newRecord(Structure.zaznam);
                         zaznamExists = false;
                     }
@@ -284,10 +284,11 @@ public class OAIHarvester extends AbstractPocessDataSource {
                     if ("".equals(cnbStr)) {
 
                         uniqueCode = MD5.generate(new String[]{
-                            hlavninazev, 
+                            hlavninazev,
                             xmlReader.getNodeValue(node, "./oai:metadata/marc:record/marc:datafield[@tag='245']/marc:subfield[@code='b']/text()"),
                             xmlReader.getNodeValue(node, "./oai:metadata/marc:record/marc:datafield[@tag='700']/marc:subfield[@code='a']/text()"),
-                            xmlReader.getNodeValue(node, "./oai:metadata/marc:record/marc:datafield[@tag='260']/marc:subfield[@code='a']/text()"), 
+                            xmlReader.getNodeValue(node, "./oai:metadata/marc:record/marc:datafield[@tag='260']/marc:subfield[@code='a']/text()"),
+                            xmlReader.getNodeValue(node, "./oai:metadata/marc:record/marc:datafield[@tag='260']/marc:subfield[@code='b']/text()"),
                             xmlReader.getNodeValue(node, "./oai:metadata/marc:record/marc:datafield[@tag='260']/marc:subfield[@code='c']/text()")
                         });
                         codeType = "md5";
@@ -312,30 +313,30 @@ public class OAIHarvester extends AbstractPocessDataSource {
 
                     Structure.zaznam.sourceXML.setValue(fr, xmlStr);
                     rc.addRecord(null, fr, fr, Operation.CREATE);
-                    /*
-                     try {
-                     rc = context.getAplikatorService().processRecords(rc);
-                     } catch (Exception ex) {
-                     if (arguments.continueOnDocError) {
-                     logFile.newLine();
-                     logFile.write("Error writing docs to db. Id: " + identifier);
-                     logFile.flush();
-                     logger.log(Level.WARNING, "Error writing doc to db. Id: {0}", identifier);
-                     } else {
-                     throw new Exception(ex);
-                     }
-                     }
-                     */
+
+                    try {
+                        rc = context.getAplikatorService().processRecords(rc);
+                    } catch (Exception ex) {
+                        if (arguments.continueOnDocError) {
+                            logFile.newLine();
+                            logFile.write("Error writing docs to db. Id: " + identifier);
+                            logFile.flush();
+                            logger.log(Level.WARNING, "Error writing doc to db. Id: {0}", identifier);
+                        } else {
+                            throw new Exception(ex);
+                        }
+                    }
+
                     Structure.sklizen.pocet.setValue(sklizen, currentDocsSent++);
                     rc.addRecord(null, sklizen, sklizen, Operation.UPDATE);
                     //try {
                     if (!arguments.dontIndex) {
-                        if(zaznamExists) {
+                        if (zaznamExists) {
                             reindexRecords(uniqueCode, codeType, identifier);
-                        }else{
+                        } else {
                             indexer.processXML(xmlStr, uniqueCode, codeType, identifier);
                         }
-                        
+
                     }
 //                    } catch (Exception ex) {
 //                        currentDocsSent--;
@@ -402,6 +403,7 @@ public class OAIHarvester extends AbstractPocessDataSource {
         try {
             xmlReader.readUrl(url.toString());
         } catch (Exception ex) {
+            logger.log(Level.WARNING, ex.toString());
             logFile.newLine();
             logFile.write("retrying url: " + url.toString());
             xmlReader.readUrl(url.toString());
@@ -423,14 +425,15 @@ public class OAIHarvester extends AbstractPocessDataSource {
                 //TODO
             } else {
                 if (!arguments.onlyHarvest && currentIndex > arguments.startIndex) {
-                    RecordContainer rc = new RecordContainer();
+                    
                     for (int i = 0; i < nodes.getLength(); i++) {
                         identifier = xmlReader.getNodeValue("//oai:record[position()=" + (i + 1) + "]/oai:header/oai:identifier/text()");
+                        RecordContainer rc = new RecordContainer();
                         processRecord(nodes.item(i), identifier, i + 1, rc);
                         currentIndex++;
                         logger.log(Level.FINE, "number: {0} of {1}", new Object[]{(currentDocsSent), completeListSize});
                     }
-                    context.getAplikatorService().processRecords(rc);
+                    //context.getAplikatorService().processRecords(rc);
                 }
                 if (!arguments.dontIndex) {
 //                    if (fileName != null) {
@@ -451,15 +454,13 @@ public class OAIHarvester extends AbstractPocessDataSource {
 
     private void getRecordsFromDisk(String from) throws Exception {
         logger.info("Processing dowloaded files");
-        Calendar c_from = Calendar.getInstance();
-        c_from.setTime(sdfoai.parse(from));
-        
-        
-        String dirFrom = sdf.format(c_from.getTime());
+//        Calendar c_from = Calendar.getInstance();
+//        c_from.setTime(sdfoai.parse(from));
+//        String dirFrom = sdf.format(c_from.getTime());
         if (arguments.pathToData.equals("")) {
-            getRecordsFromDir(new File(conf.getProperty("indexDirectory")), dirFrom);
+            getRecordsFromDir(new File(conf.getProperty("indexDirectory")), from);
         } else {
-            getRecordsFromDir(new File(arguments.pathToData), dirFrom);
+            getRecordsFromDir(new File(arguments.pathToData), from);
         }
         if (!arguments.dontIndex) {
 //            indexer.finish();
@@ -481,21 +482,22 @@ public class OAIHarvester extends AbstractPocessDataSource {
                 logger.info("Loading file " + children[i].getPath());
                 xmlReader.loadXmlFromFile(children[i]);
                 NodeList nodes = xmlReader.getListOfNodes("//oai:record");
-                RecordContainer rc = new RecordContainer();
+                
                 for (int j = 0; j < nodes.getLength(); j++) {
                     if (currentIndex > arguments.startIndex) {
                         identifier = xmlReader.getNodeValue("//oai:record[position()=" + (j + 1) + "]/oai:header/oai:identifier/text()");
+                        RecordContainer rc = new RecordContainer();
                         processRecord(nodes.item(j), identifier, j + 1, rc);
                     }
                     currentIndex++;
                     logger.log(Level.FINE, "number: {0}", currentDocsSent);
                 }
+                
 
 //                if (!arguments.dontIndex) {
 //                    indexer.processXML(children[i]);
 //                    indexer.commit();
 //                }
-
             }
         }
     }

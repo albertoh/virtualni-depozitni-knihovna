@@ -2,29 +2,38 @@ package cz.incad.vdkcr.server.data;
 
 import cz.incad.vdkcr.server.Structure;
 import cz.incad.vdkcr.server.datasources.oai.ZdrojJob;
-import cz.incad.vdkcr.server.functions.SkliditZdroj;
-import org.aplikator.client.shared.data.Record;
-import org.aplikator.server.Context;
-import org.aplikator.server.descriptor.*;
-import org.aplikator.server.persistence.Persister;
-import org.aplikator.server.persistence.PersisterFactory;
-import org.aplikator.server.persistence.PersisterTriggers;
-import org.quartz.*;
-import org.quartz.core.jmx.JobDataMapSupport;
-import org.quartz.impl.StdSchedulerFactory;
+import static org.aplikator.server.descriptor.Panel.column;
+import static org.aplikator.server.descriptor.Panel.row;
+import static org.aplikator.server.descriptor.RepeatedForm.repeated;
 
+import org.aplikator.server.descriptor.Collection;
+import org.aplikator.server.descriptor.Entity;
+import org.aplikator.server.descriptor.Function;
+import org.aplikator.server.descriptor.Property;
+import org.aplikator.server.descriptor.View;
+
+import cz.incad.vdkcr.server.functions.SkliditZdroj;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import static org.aplikator.server.descriptor.Panel.column;
-import static org.aplikator.server.descriptor.Panel.row;
-import static org.aplikator.server.descriptor.RepeatedForm.repeated;
+import org.aplikator.client.shared.data.Record;
+import org.aplikator.server.Context;
+import org.aplikator.server.persistence.Persister;
+import org.aplikator.server.persistence.PersisterFactory;
+import org.aplikator.server.persistence.PersisterTriggers;
 import static org.quartz.CronScheduleBuilder.cronSchedule;
+import org.quartz.CronTrigger;
 import static org.quartz.JobBuilder.newJob;
+import org.quartz.JobDataMap;
+import org.quartz.JobDetail;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
+import org.quartz.SchedulerFactory;
 import static org.quartz.TriggerBuilder.newTrigger;
+import org.quartz.core.jmx.JobDataMapSupport;
+import org.quartz.impl.StdSchedulerFactory;
 
 public class Zdroj extends Entity {
 
@@ -79,7 +88,7 @@ public class Zdroj extends Entity {
 
         JobDetail job = newJob(ZdrojJob.class)
                 .withIdentity("job_" + name, "Zdroj")
-                .usingJobData(data)
+                .setJobData(data)
                 .build();
         if (sched.checkExists(job.getKey())) {
             sched.deleteJob(job.getKey());
