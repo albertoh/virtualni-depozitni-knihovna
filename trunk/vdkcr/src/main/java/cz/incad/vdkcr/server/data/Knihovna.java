@@ -27,6 +27,10 @@ import org.aplikator.server.persistence.PersisterTriggers;
 public class Knihovna extends Entity {
     public Property<String> code;
     public Property<String> nazev;
+    public Property<String> heslo;
+    public Property<String> userrole;
+    public Property<String> email;
+    public Property<String> telefon;
     public Collection<Pohled> pohled;
     public Function knihovnaPohled = new Function("KnihovnaPohled", "KnihovnaPohled", new KnihovnaPohled());
     
@@ -62,6 +66,10 @@ public class Knihovna extends Entity {
     private void initFields() {
         code = stringProperty("code");
         nazev = stringProperty("nazev", 512);
+        userrole = stringProperty("userrole");
+        heslo = stringProperty("heslo", 128);
+        email = stringProperty("email", 255);
+        telefon = stringProperty("telefon");
         pohled = collectionProperty(Structure.pohled, "knihovna", "knihovna");
         addIndex("code_knihovna_idx", true, code);
         
@@ -82,7 +90,8 @@ public class Knihovna extends Entity {
 //        Link link = new Link("view", "org.aplikator.client.local.command.ListEntities:View:Zaznam", code);
         retval.addProperty(code).addProperty(nazev);
         retval.form(column(
-                row(column(code).setSize(3), column(nazev).setSize(6)),// column(link).setSize(2)),
+                row(column(code).setSize(3), column(nazev).setSize(6), column(userrole).setSize(2)),
+                row(column(telefon).setSize(3), column(email).setSize(8)),// column(link).setSize(2)),
                 row(knihovnaPohled),
                 row(repeated(pohled))
             ));

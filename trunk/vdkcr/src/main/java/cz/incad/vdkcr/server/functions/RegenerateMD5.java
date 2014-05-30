@@ -21,9 +21,11 @@ public class RegenerateMD5 extends Executable {
         try {
             RegenerateMD5Process ri = new RegenerateMD5Process();
             ri.runHarvestAsProcess(null, null, context);
-            return new FunctionResult("Proces bezi ... ", true);
+            return new FunctionResult("Proces slouceni zaznamu bezi ... ", true);
+            //ri.run();
+            //return new FunctionResult("Proces slouceni zaznamu zkoncil ", true);
         } catch (Throwable t) {
-            return new FunctionResult("Index db selhala: " + t, false);
+            return new FunctionResult("Slouceni selhalo: " + t, false);
         }
     }
     

@@ -9,7 +9,7 @@ import com.fastsearch.esp.content.IDocument;
 import com.typesafe.config.Config;
 import cz.incad.vdkcr.server.Structure;
 import cz.incad.vdkcr.server.datasources.DataSource;
-import cz.incad.vdkcr.server.datasources.util.XMLReader;
+import cz.incad.vdkcommon.xml.XMLReader;
 import cz.incad.vdkcr.server.fast.FastIndexer;
 import cz.incad.vdkcr.server.index.IndexTypes;
 import org.aplikator.client.shared.data.Operation;
