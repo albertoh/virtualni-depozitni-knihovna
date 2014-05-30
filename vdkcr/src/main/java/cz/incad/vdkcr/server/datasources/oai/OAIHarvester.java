@@ -4,9 +4,11 @@ import com.typesafe.config.Config;
 import cz.incad.vdkcr.server.Structure;
 import cz.incad.vdkcr.server.data.SklizenStatus;
 import cz.incad.vdkcr.server.datasources.AbstractPocessDataSource;
-import cz.incad.vdkcr.server.datasources.util.XMLReader;
+import cz.incad.vdkcommon.xml.XMLReader;
 import cz.incad.vdkcr.server.index.solr.SolrIndexer;
-import cz.incad.vdkcr.server.utils.MD5;
+import cz.incad.vdkcommon.MD5;
+import cz.incad.vdkcommon.Slouceni;
+import cz.incad.vdkcr.server.functions.Bohemika;
 import org.aplikator.client.shared.data.Operation;
 import org.aplikator.client.shared.data.Record;
 import org.aplikator.client.shared.data.RecordContainer;
@@ -279,19 +281,23 @@ public class OAIHarvester extends AbstractPocessDataSource {
                         zaznamExists = false;
                     }
                     String cnbStr = xmlReader.getNodeValue(node, "./oai:metadata/marc:record/marc:datafield[@tag='015']/marc:subfield[@code='a']/text()");
-                    String uniqueCode;
-                    String codeType;
+                    
+                    
+                    String codeType = "md5";
+                    String uniqueCode = Slouceni.generateMD5(xmlStr);
+//                    String codeType;
                     if ("".equals(cnbStr)) {
-
-                        uniqueCode = MD5.generate(new String[]{
-                            hlavninazev,
-                            xmlReader.getNodeValue(node, "./oai:metadata/marc:record/marc:datafield[@tag='245']/marc:subfield[@code='b']/text()"),
-                            xmlReader.getNodeValue(node, "./oai:metadata/marc:record/marc:datafield[@tag='700']/marc:subfield[@code='a']/text()"),
-                            xmlReader.getNodeValue(node, "./oai:metadata/marc:record/marc:datafield[@tag='260']/marc:subfield[@code='a']/text()"),
-                            xmlReader.getNodeValue(node, "./oai:metadata/marc:record/marc:datafield[@tag='260']/marc:subfield[@code='b']/text()"),
-                            xmlReader.getNodeValue(node, "./oai:metadata/marc:record/marc:datafield[@tag='260']/marc:subfield[@code='c']/text()")
-                        });
-                        codeType = "md5";
+//
+//                        uniqueCode = MD5.generate(new String[]{
+//                            hlavninazev,
+//                            xmlReader.getNodeValue(node, "./oai:metadata/marc:record/marc:datafield[@tag='245']/marc:subfield[@code='a']/text()"),
+//                            xmlReader.getNodeValue(node, "./oai:metadata/marc:record/marc:datafield[@tag='245']/marc:subfield[@code='b']/text()"),
+//                            xmlReader.getNodeValue(node, "./oai:metadata/marc:record/marc:datafield[@tag='100']/marc:subfield[@code='a']/text()"),
+//                            xmlReader.getNodeValue(node, "./oai:metadata/marc:record/marc:datafield[@tag='260']/marc:subfield[@code='a']/text()"),
+//                            xmlReader.getNodeValue(node, "./oai:metadata/marc:record/marc:datafield[@tag='260']/marc:subfield[@code='b']/text()"),
+//                            xmlReader.getNodeValue(node, "./oai:metadata/marc:record/marc:datafield[@tag='260']/marc:subfield[@code='c']/text()")
+//                        });
+//                        codeType = "md5";
                     } else {
                         uniqueCode = MD5.generate(new String[]{cnbStr});
                         Structure.zaznam.ccnb.setValue(fr, cnbStr);
@@ -334,7 +340,7 @@ public class OAIHarvester extends AbstractPocessDataSource {
                         if (zaznamExists) {
                             reindexRecords(uniqueCode, codeType, identifier);
                         } else {
-                            indexer.processXML(xmlStr, uniqueCode, codeType, identifier);
+                            indexer.processXML(xmlStr, uniqueCode, codeType, identifier, Bohemika.isBohemika(xmlStr));
                         }
 
                     }
@@ -628,7 +634,7 @@ public class OAIHarvester extends AbstractPocessDataSource {
 
     }
 
-    String sqlReindex = "select sourceXML from zaznam where uniqueCode=?";
+    String sqlReindex = "select sourceXML, bohemika from zaznam where uniqueCode=?";
     PreparedStatement psReindex;
 
     private void reindexRecords(String uniqueCode, String codeType, String identifier) throws Exception {
@@ -637,7 +643,7 @@ public class OAIHarvester extends AbstractPocessDataSource {
         ResultSet rs = psReindex.executeQuery();
         while (rs.next()) {
             //logger.log(Level.INFO, rs.getString("sourceXML"));
-            indexer.processXML(rs.getString("sourceXML"), uniqueCode, codeType, identifier);
+            indexer.processXML(rs.getString("sourceXML"), uniqueCode, codeType, identifier, rs.getBoolean("bohemika"));
 
         }
 //        throw new Exception("KONEC");

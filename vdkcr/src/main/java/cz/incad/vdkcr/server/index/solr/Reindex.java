@@ -29,7 +29,7 @@ public class Reindex extends AbstractPocessDataSource {
     SolrIndexer indexer;
     int total = 0;
 
-    String sqlZaznamy = "select zaznam_id, identifikator, uniqueCode, codeType, sourceXML from zaznam";
+    String sqlZaznamy = "select zaznam_id, identifikator, uniqueCode, codeType, sourceXML, bohemika from zaznam";
     PreparedStatement psZaznamy;
 
     String sqlNabidky = "select knihovna, offer from NABIDKY where zaznam=?";
@@ -125,7 +125,8 @@ public class Reindex extends AbstractPocessDataSource {
                 indexer.processXML(rs.getString("sourceXML"),
                         rs.getString("uniqueCode"),
                         rs.getString("codeType"),
-                        rs.getString("identifikator"));
+                        rs.getString("identifikator"),
+                        rs.getBoolean("bohemika"));
                 
                 //indexer.commit();
                 indexNabidky(rs.getString("uniqueCode"), rs.getString("uniqueCode"), rs.getString("codeType"));

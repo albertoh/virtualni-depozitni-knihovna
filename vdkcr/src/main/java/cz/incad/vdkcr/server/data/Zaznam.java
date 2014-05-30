@@ -22,6 +22,7 @@ public class Zaznam extends Entity {
     public Property<String> knihovna;
     public Property<String> uniqueCode;
     public Property<String> codeType;
+    public Property<Boolean> bohemika;
 
     
     public Zaznam() {
@@ -40,6 +41,7 @@ public class Zaznam extends Entity {
         uzivatel = stringProperty("uzivatel");
         uniqueCode = stringProperty("uniqueCode");
         codeType = stringProperty("codeType", 10);
+        bohemika = booleanProperty("bohemika");
         knihovna = stringProperty("knihovna").setListProvider(Knihovna.getGroupList());
         addIndex("url_zaznam_idx", true, urlZdroje);
         addIndex("identif_zaznam_idx", true, identifikator);
@@ -66,7 +68,7 @@ public class Zaznam extends Entity {
         retval.addProperty(hlavniNazev).addProperty(typDokumentu).addProperty(sourceXML);
         retval.setPageSize(20);
         retval.form(column(
-                knihovna,
+                knihovna, bohemika,
                 row(hlavniNazev.widget().setSize(9), typDokumentu.widget().setSize(3)),
                 urlZdroje, uniqueCode, ccnb, identifikator,
                 ReferenceField.reference(sklizen, Structure.sklizen.spusteni,Structure.sklizen.stav),

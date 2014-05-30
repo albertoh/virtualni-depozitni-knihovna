@@ -236,11 +236,12 @@ public class SolrIndexer implements Search {
         SolrIndexerCommiter.postData(this.solrUrl, xml);
     }
     
-    public void processXML(String xml, String uniqueCode, String codeType, String identifier) throws Exception{
+    public void processXML(String xml, String uniqueCode, String codeType, String identifier, boolean bohemika) throws Exception{
         logger.log(Level.INFO, "Sending {0} to index ...", identifier);
         StreamResult destStream = new StreamResult(new StringWriter());
         transformer.setParameter("uniqueCode", uniqueCode);
         transformer.setParameter("codeType", codeType);
+        transformer.setParameter("bohemika", Boolean.toString(bohemika));
         transformer.transform(new StreamSource(new StringReader(xml)), destStream);
         StringWriter sw = (StringWriter) destStream.getWriter();
         SolrIndexerCommiter.postData(this.solrUrl, sw.toString());

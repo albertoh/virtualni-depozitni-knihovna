@@ -9,6 +9,7 @@ import org.aplikator.server.descriptor.View;
 public class Pohled extends Entity {
     public Property<String> query;
     public Property<String> nazev;
+    public Property<Boolean> isGlobal;
 
     public Pohled() {
         super("Pohled","Pohled","Pohled_ID");
@@ -18,6 +19,7 @@ public class Pohled extends Entity {
     private void initFields() {
         query = stringProperty("query");
         nazev = stringProperty("nazev", 512);
+        isGlobal = booleanProperty("isGlobal");
         addIndex("code_pohled_idx", true, query);
 
     }
@@ -28,7 +30,8 @@ public class Pohled extends Entity {
         retval.addProperty(query).addProperty(nazev);
         retval.form(column(
                 query,
-                nazev
+                nazev,
+                isGlobal
             ));
         return retval;
     }
