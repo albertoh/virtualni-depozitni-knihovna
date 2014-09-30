@@ -8,21 +8,26 @@ import org.aplikator.server.descriptor.Property;
 import org.aplikator.server.descriptor.Reference;
 import org.aplikator.server.descriptor.View;
 
-public class Nabidky extends Entity {
+public class ZaznamDemand extends Entity {
+    public Property<String> uniqueCode;
     public Property<String> zaznam;
+    public Property<String> exemplar;
     public Reference<Knihovna> knihovna;
-    public Reference<Offer> offer;
-
-    public Nabidky() {
-        super("Nabidky","Nabidky", "Nabidky_ID");
+    public Reference<Demand> demand;
+    public Property<String> fields;
+    
+    public ZaznamDemand() {
+        super("ZaznamDemand","ZaznamDemand", "ZaznamDemand_ID");
         initFields();
     }
 
     private void initFields() {
+        uniqueCode = stringProperty("uniqueCode");
         zaznam = stringProperty("zaznam");
+        fields = stringProperty("fields");
         knihovna = referenceProperty(Structure.knihovna, "knihovna");
-        offer = referenceProperty(Structure.offer, "offer");
-        addIndex("id_kn_nabidky_idx", true, zaznam, knihovna, offer);
+        demand = referenceProperty(Structure.demand, "demand");
+        addIndex("id_kn_demand_idx", true, zaznam, knihovna, demand);
 
     }
 
@@ -31,9 +36,11 @@ public class Nabidky extends Entity {
         View retval = new View(this);
         retval.addProperty(zaznam).addProperty(knihovna);
         retval.form(column(
+                uniqueCode,
                 zaznam,
                 knihovna,
-                offer
+                demand,
+                fields
             ));
         return retval;
     }
