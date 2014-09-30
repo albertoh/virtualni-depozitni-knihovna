@@ -53,29 +53,6 @@ public class Reindex extends AbstractPocessDataSource {
 
     }
     
-//    private void indexNabidky() throws Exception{
-//        String sql = "select NABIDKY.*, ZAZNAM.codeType from NABIDKY";
-//        PreparedStatement ps;
-//        ResultSet rs = ps.executeQuery();
-//        StringBuilder sb = new StringBuilder();
-//        while (rs.next()) {
-//        sb.append("<add><doc>");
-//            sb.append("<field name=\"code\">")
-//                    .append(docCode)
-//                    .append("</field>");
-//            sb.append("<field name=\"md5\">")
-//                    .append(docCode)
-//                    .append("</field>");
-//            sb.append("<field name=\"code_type\">")
-//                    .append(codeType)
-//                    .append("</field>");
-//            sb.append("<field name=\"nabidka\" update=\"add\">")
-//                    .append(rs.getInt("offer"))
-//                    .append("</field>");
-//            sb.append("</doc></add>");
-//        }
-//    }
-
     private void indexNabidky( String id, String docCode, String codeType) throws Exception {
         
         psNabidky.setString(1, id);
@@ -114,6 +91,7 @@ public class Reindex extends AbstractPocessDataSource {
         indexer.clean();
         logger.log(Level.INFO, "Indexace zaznamu...");
         ResultSet rs = psZaznamy.executeQuery();
+        
         while (rs.next()) {
             //logger.log(Level.INFO, rs.getString("sourceXML"));
             // check interrupted thread
@@ -127,9 +105,11 @@ public class Reindex extends AbstractPocessDataSource {
                         rs.getString("codeType"),
                         rs.getString("identifikator"),
                         rs.getBoolean("bohemika"));
+                if(total%1000 == 0){
+                    indexer.commit();
+                }
                 
-                //indexer.commit();
-                indexNabidky(rs.getString("uniqueCode"), rs.getString("uniqueCode"), rs.getString("codeType"));
+                //indexNabidky(rs.getString("uniqueCode"), rs.getString("uniqueCode"), rs.getString("codeType"));
             } catch (Exception ex) {
                 logger.log(Level.WARNING, "Error in record " + rs.getString("identifikator"), ex);
             }
